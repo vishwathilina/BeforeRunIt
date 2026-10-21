@@ -1,0 +1,17 @@
+[package]
+name = "beforerunit-bash"
+description = "Native bash loadable builtin for BeforeRunIt: analyzes the command line inside bash with no fork or exec"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+
+[lib]
+name = "beforerunit_bash"
+crate-type = ["cdylib"]
+
+[dependencies]
+beforerunit-core = { workspace = true, features = ["io"] }
+libc = { workspace = true }

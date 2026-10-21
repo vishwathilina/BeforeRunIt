@@ -1,0 +1,13 @@
+---
+source: crates/beforerunit-core/tests/progression.rs
+expression: "progression(\"rm -rf build\")"
+---
+r                                        | IDLE     Typing command...
+rm                                       | CAUTION  Deletes files. Waiting for file name...
+rm -r                                    | DANGER   Deletes a folder and everything inside.
+rm -rf                                   | DANGER   Force-deletes a folder forever. No confirmation.
+rm -rf b                                 | DANGER   Deletes "b" forever. Skips Trash.
+rm -rf bu                                | DANGER   Deletes "bu" forever. Skips Trash.
+rm -rf bui                               | DANGER   Deletes "bui" forever. Skips Trash.
+rm -rf buil                              | DANGER   Deletes "buil" forever. Skips Trash.
+rm -rf build                             | DANGER   Deletes "build" forever. Skips Trash.

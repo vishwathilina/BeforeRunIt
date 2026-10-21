@@ -1,0 +1,10 @@
+---
+source: crates/beforerunit-core/tests/progression.rs
+expression: "progression(\"find . -name \\\"*.bak\\\" | xargs rm\")"
+---
+f                                        | IDLE     Typing command...
+find                                     | KNOWN    Searches for files.
+find .                                   | KNOWN    Searches for files in ".".
+find . -name "*.bak" | xargs             | CAUTION  Runs a command on every piped item.
+find . -name "*.bak" | xargs r           | KNOWN    Searches for files in ".".
+find . -name "*.bak" | xargs rm          | CAUTION  Deletes the piped items. Skips Trash.

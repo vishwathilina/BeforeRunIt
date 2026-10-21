@@ -1,0 +1,213 @@
+# Containers, orchestration and infrastructure.
+
+[[cmd]]
+name = "docker"
+aliases = ["podman", "nerdctl"]
+takes_value = ["H", "context", "f", "filter", "name", "p", "v", "e", "t", "w", "u", "network", "mount", "env-file", "platform"]
+long = { force = "f", all = "a", volumes = "v" }
+risk = "known"
+text = "Runs a container command."
+  [[cmd.rule]]
+  sub = ["system prune"]
+  flags_any = ["a", "volumes"]
+  risk = "danger"
+  text = "Deletes all unused images, containers and data."
+  [[cmd.rule]]
+  sub = ["system prune", "image prune", "container prune", "builder prune", "network prune"]
+  risk = "caution"
+  text = "Deletes unused Docker data to free space."
+  [[cmd.rule]]
+  sub = ["volume prune", "volume rm"]
+  risk = "danger"
+  text = "Deletes volumes. Data inside is lost forever."
+  [[cmd.rule]]
+  sub = ["rm", "container rm"]
+  flags_any = ["v"]
+  risk = "danger"
+  text = "Deletes container {target} and its volumes."
+  pending = "Deletes containers and their volumes."
+  [[cmd.rule]]
+  sub = ["rm", "container rm"]
+  risk = "caution"
+  text = "Deletes container {target}."
+  pending = "Deletes containers."
+  [[cmd.rule]]
+  sub = ["rmi", "image rm"]
+  risk = "caution"
+  text = "Deletes image {target}."
+  pending = "Deletes images."
+  [[cmd.rule]]
+  sub = ["kill", "stop", "restart"]
+  risk = "caution"
+  text = "Stops running container {target}."
+  pending = "Stops running containers."
+  [[cmd.rule]]
+  sub = "run"
+  flags_any = ["privileged"]
+  risk = "danger"
+  text = "Runs a container with full host access."
+  [[cmd.rule]]
+  sub = "run"
+  args_any = ["/:/*", "/var/run/docker.sock*", "/etc:*", "/:/host*"]
+  risk = "danger"
+  text = "Runs a container with your host system mounted."
+  [[cmd.rule]]
+  sub = "run"
+  flags_any = ["v", "mount"]
+  risk = "caution"
+  text = "Runs a container with host folders mounted."
+  [[cmd.rule]]
+  sub = "run"
+  target = "first"
+  risk = "caution"
+  text = "Starts a container from {target}."
+  pending = "Starts a new container."
+  [[cmd.rule]]
+  sub = ["exec"]
+  risk = "caution"
+  text = "Runs a command inside container {target}."
+  pending = "Runs a command inside a container."
+  [[cmd.rule]]
+  sub = ["push"]
+  risk = "caution"
+  text = "Uploads image {target} to a registry."
+  pending = "Uploads an image to a registry."
+  [[cmd.rule]]
+  sub = ["ps", "images", "logs", "inspect", "version", "info", "stats", "top", "search", "history", "image ls", "container ls", "volume ls", "network ls", "port", "diff"]
+  risk = "known"
+  text = "Shows container information."
+  [[cmd.rule]]
+  sub = ["build", "pull", "login", "tag", "create", "start", "compose"]
+  risk = "known"
+  text = "Builds, pulls or starts containers."
+
+[[cmd]]
+name = "docker-compose"
+aliases = ["podman-compose"]
+takes_value = ["f", "p", "file", "project-name"]
+risk = "known"
+text = "Manages a multi-container app."
+  [[cmd.rule]]
+  sub = "down"
+  flags_any = ["v", "volumes"]
+  risk = "danger"
+  text = "Stops the app and deletes its volumes."
+  [[cmd.rule]]
+  sub = ["down", "stop", "kill", "rm"]
+  risk = "caution"
+  text = "Stops and removes the app containers."
+
+[[cmd]]
+name = "kubectl"
+aliases = ["oc", "k"]
+takes_value = ["n", "namespace", "context", "f", "filename", "l", "selector", "o", "output", "c", "container"]
+long = { all = "A" }
+risk = "known"
+text = "Runs a Kubernetes command."
+  [[cmd.rule]]
+  sub = "delete"
+  flags_any = ["all", "A", "all-namespaces"]
+  risk = "danger"
+  text = "Deletes many cluster resources at once."
+  [[cmd.rule]]
+  sub = "delete"
+  args_any = ["namespace", "ns", "pv", "pvc", "node", "crd"]
+  risk = "danger"
+  text = "Deletes critical cluster resources and their data."
+  [[cmd.rule]]
+  sub = "delete"
+  risk = "caution"
+  text = "Deletes {target} from the cluster."
+  pending = "Deletes cluster resources."
+  [[cmd.rule]]
+  sub = ["drain", "cordon", "taint"]
+  risk = "caution"
+  text = "Moves work off a cluster node."
+  [[cmd.rule]]
+  sub = ["apply", "create", "replace", "patch", "edit", "scale", "rollout", "set", "label", "annotate"]
+  risk = "caution"
+  text = "Changes resources in the cluster."
+  [[cmd.rule]]
+  sub = ["exec", "cp", "port-forward", "proxy", "debug"]
+  risk = "caution"
+  text = "Opens access into running pods."
+  [[cmd.rule]]
+  sub = ["get", "describe", "logs", "top", "explain", "version", "api-resources", "config", "auth", "diff", "events"]
+  risk = "known"
+  text = "Shows cluster information."
+
+[[cmd]]
+name = "helm"
+takes_value = ["n", "namespace", "f", "values", "set"]
+risk = "known"
+text = "Runs a Helm command."
+  [[cmd.rule]]
+  sub = ["uninstall", "delete"]
+  risk = "danger"
+  text = "Removes release {target} and its resources."
+  pending = "Removes a release and its resources."
+  [[cmd.rule]]
+  sub = ["install", "upgrade", "rollback"]
+  risk = "caution"
+  text = "Deploys changes to the cluster."
+
+[[cmd]]
+name = "terraform"
+aliases = ["tofu", "terragrunt"]
+risk = "known"
+text = "Runs an infrastructure command."
+  [[cmd.rule]]
+  sub = "destroy"
+  risk = "danger"
+  text = "Destroys all managed cloud infrastructure."
+  [[cmd.rule]]
+  sub = "apply"
+  flags_any = ["auto-approve"]
+  risk = "danger"
+  text = "Changes real infrastructure without asking."
+  [[cmd.rule]]
+  sub = "apply"
+  args_any = ["-destroy"]
+  risk = "danger"
+  text = "Destroys managed cloud infrastructure."
+  [[cmd.rule]]
+  sub = ["apply", "import", "taint", "state rm", "state mv", "force-unlock"]
+  risk = "caution"
+  text = "Changes real infrastructure or its state."
+  [[cmd.rule]]
+  sub = ["plan", "init", "validate", "fmt", "show", "output", "providers", "version", "graph", "state list"]
+  risk = "known"
+  text = "Inspects or prepares infrastructure. Changes nothing."
+
+[[cmd]]
+name = "ansible-playbook"
+aliases = ["ansible"]
+risk = "caution"
+text = "Runs automation on remote machines."
+  [[cmd.rule]]
+  flags_any = ["check", "C", "list-hosts", "syntax-check"]
+  risk = "known"
+  text = "Dry run. Shows what automation would change."
+
+[[cmd]]
+name = "vagrant"
+risk = "known"
+text = "Manages a virtual machine."
+  [[cmd.rule]]
+  sub = "destroy"
+  risk = "danger"
+  text = "Deletes the virtual machine and its disk."
+
+[[cmd]]
+name = "aws"
+aliases = ["gcloud", "az", "doctl", "flyctl", "heroku", "vercel", "netlify"]
+risk = "caution"
+text = "Runs a cloud command on your account."
+  [[cmd.rule]]
+  args_any = ["delete*", "rm", "rb", "terminate-instances", "destroy", "remove"]
+  risk = "danger"
+  text = "Deletes cloud resources on your account."
+  [[cmd.rule]]
+  args_any = ["list*", "describe*", "get*", "ls", "show", "whoami", "status", "logs"]
+  risk = "known"
+  text = "Reads information from your cloud account."

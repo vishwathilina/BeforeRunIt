@@ -1,0 +1,393 @@
+# Package managers, language toolchains and build tools.
+
+[[cmd]]
+name = "apt"
+aliases = ["apt-get", "aptitude", "nala"]
+risk = "known"
+text = "Runs a package manager command."
+  [[cmd.rule]]
+  sub = ["purge", "autoremove", "autopurge"]
+  risk = "danger"
+  text = "Removes packages and their settings."
+  [[cmd.rule]]
+  sub = ["remove"]
+  risk = "caution"
+  text = "Uninstalls {target}."
+  pending = "Uninstalls packages."
+  [[cmd.rule]]
+  sub = ["install", "reinstall"]
+  risk = "caution"
+  text = "Installs {target} system-wide."
+  pending = "Installs packages system-wide."
+  [[cmd.rule]]
+  sub = ["upgrade", "full-upgrade", "dist-upgrade"]
+  risk = "caution"
+  text = "Upgrades all installed packages."
+  [[cmd.rule]]
+  sub = ["update", "search", "show", "list", "policy", "depends", "rdepends", "changelog"]
+  risk = "known"
+  text = "Refreshes or searches the package list."
+
+[[cmd]]
+name = "dpkg"
+risk = "known"
+text = "Shows Debian package details."
+  [[cmd.rule]]
+  flags_any = ["P", "purge", "r", "remove"]
+  risk = "caution"
+  text = "Removes package {target}."
+  pending = "Removes a package."
+  [[cmd.rule]]
+  flags_any = ["force-all", "force-remove-essential", "force-depends"]
+  risk = "danger"
+  text = "Forces package changes. Can break the system."
+  [[cmd.rule]]
+  flags_any = ["i", "install"]
+  risk = "caution"
+  text = "Installs package file {target}."
+  pending = "Installs a package file."
+
+[[cmd]]
+name = "dnf"
+aliases = ["yum", "dnf5", "microdnf", "zypper", "tdnf"]
+long = { assumeyes = "y" }
+risk = "known"
+text = "Runs a package manager command."
+  [[cmd.rule]]
+  sub = ["remove", "erase", "autoremove", "rm"]
+  args_any = ["*kernel*", "glibc", "systemd", "dnf", "rpm", "python3", "sudo", "bash"]
+  risk = "danger"
+  text = "Removes a core package. Can break the system."
+  [[cmd.rule]]
+  sub = ["remove", "erase", "autoremove", "rm"]
+  risk = "caution"
+  text = "Uninstalls {target}."
+  pending = "Uninstalls packages."
+  [[cmd.rule]]
+  sub = ["install", "reinstall", "in", "localinstall", "downgrade"]
+  risk = "caution"
+  text = "Installs {target} system-wide."
+  pending = "Installs packages system-wide."
+  [[cmd.rule]]
+  sub = ["upgrade", "update", "distro-sync", "up", "dup", "system-upgrade"]
+  risk = "caution"
+  text = "Upgrades installed packages."
+  [[cmd.rule]]
+  sub = ["search", "info", "list", "provides", "repoquery", "history", "check-update", "makecache", "repolist", "se"]
+  risk = "known"
+  text = "Searches or shows package information."
+
+[[cmd]]
+name = "rpm"
+risk = "known"
+text = "Shows RPM package details."
+  [[cmd.rule]]
+  flags_any = ["e", "erase"]
+  risk = "caution"
+  text = "Removes package {target}."
+  pending = "Removes a package."
+  [[cmd.rule]]
+  flags_any = ["nodeps", "force"]
+  risk = "danger"
+  text = "Skips safety checks. Can break the system."
+  [[cmd.rule]]
+  flags_any = ["i", "U", "install", "upgrade"]
+  risk = "caution"
+  text = "Installs package file {target}."
+  pending = "Installs a package file."
+
+[[cmd]]
+name = "pacman"
+aliases = ["yay", "paru", "pikaur", "aura"]
+bundle = true
+risk = "known"
+text = "Runs a package manager command."
+  [[cmd.rule]]
+  flags_all = ["R", "dd"]
+  risk = "danger"
+  text = "Removes packages ignoring dependencies. Can break things."
+  [[cmd.rule]]
+  flags_any = ["R"]
+  flags_all = ["s"]
+  risk = "caution"
+  text = "Uninstalls {target} and unused dependencies."
+  pending = "Uninstalls packages and unused dependencies."
+  [[cmd.rule]]
+  flags_any = ["R"]
+  risk = "caution"
+  text = "Uninstalls {target}."
+  pending = "Uninstalls packages."
+  [[cmd.rule]]
+  flags_all = ["S", "y", "u"]
+  risk = "caution"
+  text = "Upgrades the whole system."
+  [[cmd.rule]]
+  flags_all = ["S", "c"]
+  risk = "caution"
+  text = "Deletes cached package files."
+  [[cmd.rule]]
+  flags_any = ["S", "U"]
+  flags_none = ["s", "i"]
+  risk = "caution"
+  text = "Installs {target} system-wide."
+  pending = "Installs packages system-wide."
+  [[cmd.rule]]
+  flags_any = ["Q", "Ss", "Si", "F", "s", "i"]
+  risk = "known"
+  text = "Searches or shows package information."
+
+[[cmd]]
+name = "apk"
+aliases = ["xbps-install", "xbps-remove", "emerge", "pkg", "eopkg", "slackpkg", "swupd"]
+risk = "caution"
+text = "Changes installed system packages."
+  [[cmd.rule]]
+  sub = ["search", "info", "list", "query"]
+  risk = "known"
+  text = "Searches or shows package information."
+
+[[cmd]]
+name = "snap"
+aliases = ["flatpak"]
+risk = "known"
+text = "Manages sandboxed apps."
+  [[cmd.rule]]
+  sub = ["remove", "uninstall"]
+  flags_any = ["purge", "delete-data"]
+  risk = "danger"
+  text = "Uninstalls {target} and deletes its data."
+  pending = "Uninstalls apps and deletes their data."
+  [[cmd.rule]]
+  sub = ["remove", "uninstall"]
+  risk = "caution"
+  text = "Uninstalls {target}."
+  pending = "Uninstalls apps."
+  [[cmd.rule]]
+  sub = ["install", "refresh", "update", "revert"]
+  risk = "caution"
+  text = "Installs or updates apps."
+
+[[cmd]]
+name = "brew"
+aliases = ["port", "nix-env", "guix"]
+risk = "known"
+text = "Runs a package manager command."
+  [[cmd.rule]]
+  sub = ["uninstall", "remove", "rm", "zap", "-e", "--uninstall"]
+  risk = "caution"
+  text = "Uninstalls {target}."
+  pending = "Uninstalls packages."
+  [[cmd.rule]]
+  sub = ["install", "upgrade", "-i", "-iA", "--install", "-u"]
+  risk = "caution"
+  text = "Installs or upgrades {target}."
+  pending = "Installs or upgrades packages."
+
+[[cmd]]
+name = "nix"
+aliases = ["nix-shell", "nix-build", "nixos-rebuild", "home-manager"]
+risk = "known"
+text = "Runs a Nix command."
+  [[cmd.rule]]
+  sub = ["switch", "boot", "collect-garbage", "store gc", "profile remove", "store delete"]
+  risk = "caution"
+  text = "Changes the active system or deletes old generations."
+
+[[cmd]]
+name = "pip"
+aliases = ["pip3", "pipx", "uv", "poetry", "pdm", "conda", "mamba", "micromamba"]
+risk = "known"
+text = "Runs a Python package command."
+  [[cmd.rule]]
+  sub = ["install", "add"]
+  flags_any = ["break-system-packages"]
+  risk = "danger"
+  text = "Overrides system Python packages. Can break the OS."
+  [[cmd.rule]]
+  sub = ["install", "add"]
+  args_any = ["git+*", "http*://*", "*.whl"]
+  risk = "caution"
+  text = "Installs code straight from a URL."
+  [[cmd.rule]]
+  sub = ["install", "add", "sync", "pip install"]
+  risk = "caution"
+  text = "Installs {target}. Its code runs on install."
+  pending = "Installs packages. Their code runs on install."
+  [[cmd.rule]]
+  sub = ["uninstall", "remove", "pip uninstall"]
+  risk = "caution"
+  text = "Uninstalls {target}."
+  pending = "Uninstalls Python packages."
+  [[cmd.rule]]
+  sub = ["list", "show", "freeze", "search", "info", "env list", "tree", "check", "venv", "lock", "run"]
+  risk = "known"
+  text = "Shows or runs Python packages."
+
+[[cmd]]
+name = "npm"
+aliases = ["pnpm", "yarn", "bun"]
+long = { global = "g" }
+risk = "known"
+text = "Runs a JavaScript package command."
+  [[cmd.rule]]
+  sub = ["install", "i", "add", "ci"]
+  flags_any = ["g"]
+  risk = "caution"
+  text = "Installs {target} globally. Its scripts run now."
+  pending = "Installs packages globally. Their scripts run."
+  [[cmd.rule]]
+  sub = ["install", "i", "add", "ci"]
+  risk = "caution"
+  text = "Installs {target}. Install scripts may run."
+  pending = "Installs packages. Install scripts may run."
+  [[cmd.rule]]
+  sub = ["publish", "unpublish", "deprecate"]
+  risk = "caution"
+  text = "Changes a package on the public registry."
+  [[cmd.rule]]
+  sub = ["uninstall", "remove", "rm", "un"]
+  risk = "known"
+  text = "Removes {target} from the project."
+  pending = "Removes packages from the project."
+  [[cmd.rule]]
+  sub = ["run", "start", "test", "exec", "dev", "build"]
+  risk = "caution"
+  text = "Runs a project script. It can do anything."
+
+[[cmd]]
+name = "npx"
+aliases = ["pnpx", "bunx", "dlx"]
+target = "first"
+risk = "caution"
+text = "Downloads and runs {target}. Code is unchecked."
+pending = "Downloads and runs a package."
+
+[[cmd]]
+name = "cargo"
+risk = "known"
+text = "Runs a Rust build command."
+  [[cmd.rule]]
+  sub = ["install"]
+  risk = "caution"
+  text = "Builds and installs {target}. Build scripts run."
+  pending = "Installs a Rust program. Build scripts run."
+  [[cmd.rule]]
+  sub = ["publish", "yank", "owner"]
+  risk = "caution"
+  text = "Changes a crate on crates.io."
+  [[cmd.rule]]
+  sub = ["clean"]
+  risk = "known"
+  text = "Deletes build output. Rebuilding takes time."
+  [[cmd.rule]]
+  sub = ["build", "run", "test", "check", "clippy", "fmt", "doc", "bench", "add", "update", "new", "init", "tree", "search", "b", "r", "t", "c"]
+  risk = "known"
+  text = "Builds, tests or runs this Rust project."
+
+[[cmd]]
+name = "rustup"
+aliases = ["nvm", "pyenv", "rbenv", "asdf", "mise", "sdk", "volta", "fnm"]
+risk = "known"
+text = "Manages language toolchain versions."
+  [[cmd.rule]]
+  sub = ["self uninstall", "implode"]
+  risk = "danger"
+  text = "Uninstalls the whole toolchain manager."
+
+[[cmd]]
+name = "go"
+aliases = ["gofmt", "deno"]
+risk = "known"
+text = "Runs a Go or Deno command."
+  [[cmd.rule]]
+  sub = ["install", "get"]
+  risk = "caution"
+  text = "Downloads and installs {target}."
+  pending = "Downloads and installs code."
+
+[[cmd]]
+name = "gem"
+aliases = ["bundle", "composer", "cpan", "cpanm", "luarocks", "opam", "cabal", "stack", "mix", "hex", "dotnet", "nuget"]
+risk = "known"
+text = "Runs a package or build command."
+  [[cmd.rule]]
+  sub = ["install", "require", "add", "global require"]
+  risk = "caution"
+  text = "Installs {target}. Its code may run."
+  pending = "Installs packages. Their code may run."
+  [[cmd.rule]]
+  sub = ["uninstall", "remove"]
+  risk = "caution"
+  text = "Uninstalls {target}."
+  pending = "Uninstalls packages."
+
+[[cmd]]
+name = "make"
+aliases = ["gmake", "ninja", "just", "task", "mage", "meson", "cmake", "bazel", "gradle", "mvn", "ant", "scons"]
+takes_value = ["C", "f", "j", "B"]
+target = "first"
+risk = "caution"
+text = "Runs build target {target}. Scripts can do anything."
+pending = "Runs build scripts. They can do anything."
+  [[cmd.rule]]
+  sub = ["install", "uninstall"]
+  risk = "caution"
+  text = "Installs or removes files system-wide."
+  [[cmd.rule]]
+  sub = ["clean", "distclean", "mrproper"]
+  risk = "known"
+  text = "Deletes build output."
+  [[cmd.rule]]
+  flags_any = ["n", "just-print", "dry-run", "version", "help"]
+  risk = "known"
+  text = "Shows what the build would do."
+
+[[cmd]]
+name = "python"
+aliases = ["python3", "python2", "py", "pypy", "pypy3", "node", "ruby", "perl", "php", "lua", "luajit", "Rscript", "julia", "java", "kotlin", "scala", "elixir", "erl"]
+bundle = false
+takes_value = ["m", "c", "e", "W", "X", "r", "jar"]
+target = "first"
+risk = "caution"
+text = "Runs program {target}. It can do anything."
+pending = "Starts an interpreter."
+  [[cmd.rule]]
+  flags_any = ["c", "e"]
+  risk = "caution"
+  text = "Runs inline code. It can do anything."
+  [[cmd.rule]]
+  args_any = ["http.server", "SimpleHTTPServer"]
+  risk = "caution"
+  text = "Shares this folder over the network."
+  [[cmd.rule]]
+  flags_any = ["m"]
+  args_any = ["venv", "pip", "pytest", "json.tool", "unittest", "doctest", "timeit"]
+  risk = "known"
+  text = "Runs a standard Python tool."
+  [[cmd.rule]]
+  flags_any = ["V", "version", "h", "help"]
+  risk = "known"
+  text = "Shows the interpreter version or help."
+
+[[cmd]]
+name = "gcc"
+aliases = ["g++", "cc", "c++", "clang", "clang++", "rustc", "javac", "tsc", "zig", "nasm", "ld", "as"]
+takes_value = ["o", "I", "L", "l", "D", "std"]
+risk = "known"
+text = "Compiles source code."
+
+[[cmd]]
+name = "pre-commit"
+aliases = ["husky", "lefthook"]
+risk = "known"
+text = "Runs repository hooks."
+
+[[cmd]]
+name = "appimagetool"
+aliases = ["dpkg-deb", "rpmbuild", "makepkg", "debuild", "checkinstall"]
+risk = "known"
+text = "Builds a package."
+  [[cmd.rule]]
+  flags_any = ["i", "install"]
+  risk = "caution"
+  text = "Builds and installs a package system-wide."

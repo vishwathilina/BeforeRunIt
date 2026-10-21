@@ -1,0 +1,498 @@
+# System administration, processes, disks, users and shell builtins.
+
+# --- wrappers (the engine unwraps these and analyzes the inner command) ---
+
+[[cmd]]
+name = "sudo"
+aliases = ["doas", "run0", "pkexec"]
+risk = "caution"
+text = "Runs the next command as administrator."
+pending = "Runs the next command as administrator."
+
+[[cmd]]
+name = "su"
+risk = "caution"
+text = "Switches user. Default is a root shell."
+
+[[cmd]]
+name = "env"
+category = "info"
+risk = "known"
+text = "Shows environment variables."
+
+[[cmd]]
+name = "xargs"
+risk = "caution"
+text = "Runs a command on every piped item."
+pending = "Runs a command on every piped item."
+
+[[cmd]]
+name = "watch"
+category = "read"
+risk = "known"
+text = "Repeats a command every few seconds."
+
+[[cmd]]
+name = "nohup"
+aliases = ["setsid", "disown"]
+risk = "known"
+text = "Keeps a command running after you log out."
+
+[[cmd]]
+name = "time"
+aliases = ["timeout", "nice", "ionice", "stdbuf", "chrt", "unbuffer", "caffeinate", "systemd-run", "proxychains", "torsocks", "firejail", "flatpak-spawn"]
+category = "info"
+risk = "known"
+text = "Runs a command with a time or priority wrapper."
+
+[[cmd]]
+name = "exec"
+risk = "caution"
+text = "Replaces this shell with another program."
+
+[[cmd]]
+name = "eval"
+risk = "caution"
+text = "Runs text as shell code."
+
+[[cmd]]
+name = "source"
+aliases = ["."]
+risk = "caution"
+text = "Runs {target} inside this shell."
+pending = "Runs a script inside this shell."
+
+# --- processes ---
+
+[[cmd]]
+name = "kill"
+takes_value = ["s", "n"]
+target = "positional"
+risk = "caution"
+text = "Stops process {target}."
+pending = "Stops a process by ID."
+  [[cmd.rule]]
+  args_any = ["1", "-1"]
+  risk = "danger"
+  hard = true
+  text = "Kills init or every process. System goes down."
+  [[cmd.rule]]
+  flags_any = ["9", "KILL", "SIGKILL"]
+  risk = "caution"
+  text = "Force-kills process {target}. Unsaved work is lost."
+  pending = "Force-kills a process. Unsaved work is lost."
+
+[[cmd]]
+name = "killall"
+aliases = ["pkill"]
+takes_value = ["s", "signal", "u", "user"]
+risk = "caution"
+text = "Stops every process named {target}."
+pending = "Stops processes by name."
+  [[cmd.rule]]
+  flags_any = ["9", "KILL"]
+  risk = "danger"
+  text = "Force-kills every process named {target}."
+  pending = "Force-kills processes by name."
+  [[cmd.rule]]
+  flags_any = ["u", "user"]
+  risk = "danger"
+  text = "Kills every process of a user."
+
+[[cmd]]
+name = "xkill"
+risk = "caution"
+text = "Kills the window you click next."
+
+[[cmd]]
+name = "ps"
+aliases = ["top", "htop", "btop", "atop", "pgrep", "pidof", "pstree", "glances"]
+category = "read"
+risk = "known"
+text = "Shows running processes."
+
+[[cmd]]
+name = "renice"
+risk = "caution"
+text = "Changes the priority of a running process."
+
+# --- power ---
+
+[[cmd]]
+name = "reboot"
+aliases = ["shutdown", "poweroff", "halt", "init", "telinit"]
+risk = "danger"
+text = "Restarts or shuts down this machine now."
+  [[cmd.rule]]
+  flags_any = ["c"]
+  risk = "known"
+  text = "Cancels a scheduled shutdown."
+
+[[cmd]]
+name = "systemctl"
+takes_value = ["H", "M", "t", "type", "p", "property", "s", "signal"]
+long = { now = "now" }
+target = "positional"
+risk = "known"
+text = "Shows system service information."
+  [[cmd.rule]]
+  sub = ["reboot", "poweroff", "halt", "kexec", "soft-reboot", "rescue", "emergency"]
+  risk = "danger"
+  text = "Restarts or shuts down this machine now."
+  [[cmd.rule]]
+  sub = ["suspend", "hibernate", "hybrid-sleep"]
+  risk = "caution"
+  text = "Puts this machine to sleep."
+  [[cmd.rule]]
+  sub = ["stop", "disable", "mask", "kill"]
+  args_any = ["sshd", "ssh", "NetworkManager", "systemd-networkd", "networking", "dbus", "gdm", "sddm", "lightdm", "firewalld"]
+  risk = "danger"
+  text = "Stops critical service {target}. May lock you out."
+  pending = "Stops a critical system service."
+  [[cmd.rule]]
+  sub = ["stop", "disable", "mask", "kill"]
+  risk = "caution"
+  text = "Stops or disables service {target}."
+  pending = "Stops or disables a service."
+  [[cmd.rule]]
+  sub = ["start", "restart", "reload", "enable", "unmask", "daemon-reload", "edit", "set-property", "isolate"]
+  risk = "caution"
+  text = "Changes system service {target}."
+  pending = "Starts or changes a service."
+
+[[cmd]]
+name = "service"
+target = "first"
+risk = "caution"
+text = "Controls system service {target}."
+pending = "Controls a system service."
+  [[cmd.rule]]
+  args_any = ["status"]
+  risk = "known"
+  text = "Shows the status of {target}."
+  pending = "Shows the status of a service."
+
+[[cmd]]
+name = "journalctl"
+takes_value = ["u", "n", "p", "S", "U", "since", "until", "unit", "b"]
+category = "read"
+risk = "known"
+text = "Shows system logs."
+  [[cmd.rule]]
+  flags_any = ["vacuum-size", "vacuum-time", "vacuum-files", "rotate", "flush"]
+  risk = "caution"
+  text = "Deletes old system logs."
+
+[[cmd]]
+name = "dmesg"
+aliases = ["uptime", "uname", "hostname", "whoami", "id", "groups", "w", "who", "last", "lastlog", "free", "vmstat", "iostat", "lscpu", "lsusb", "lspci", "lsmod", "lshw", "inxi", "neofetch", "fastfetch", "sensors", "nproc", "arch", "date", "cal", "locale", "tty", "users", "finger", "printenv"]
+category = "info"
+risk = "known"
+text = "Shows system information."
+  [[cmd.rule]]
+  flags_any = ["C", "c", "clear", "read-clear"]
+  risk = "caution"
+  text = "Clears the kernel log."
+
+# --- disks ---
+
+[[cmd]]
+name = "dd"
+bundle = false
+target = "kv:of"
+escalate = "disk"
+risk = "caution"
+text = "Writes raw data to {target}."
+pending = "Copies raw data. Waiting for output target..."
+  [[cmd.rule]]
+  args_any = ["of=/dev/sd*", "of=/dev/nvme*", "of=/dev/vd*", "of=/dev/mmcblk*", "of=/dev/hd*", "of=/dev/xvd*", "of=/dev/disk/*"]
+  risk = "danger"
+  hard = true
+  text = "Overwrites disk {target}. All data lost."
+  pending = "Overwrites a whole disk. All data lost."
+
+[[cmd]]
+name = "mkfs"
+aliases = ["mke2fs", "mkfs.ext4", "mkfs.ext3", "mkfs.ext2", "mkfs.xfs", "mkfs.btrfs", "mkfs.vfat", "mkfs.fat", "mkfs.ntfs", "mkfs.exfat", "mkswap"]
+escalate = "disk"
+risk = "danger"
+hard = true
+text = "Formats {target}. Everything on it is erased."
+pending = "Formats a disk. Everything on it is erased."
+
+[[cmd]]
+name = "fdisk"
+aliases = ["gdisk", "sfdisk", "cfdisk", "parted", "gparted", "sgdisk"]
+escalate = "disk"
+risk = "danger"
+text = "Edits partitions on {target}. Can destroy data."
+pending = "Edits disk partitions. Can destroy data."
+  [[cmd.rule]]
+  flags_any = ["l", "list", "p", "print"]
+  risk = "known"
+  text = "Lists disk partitions."
+
+[[cmd]]
+name = "cryptsetup"
+risk = "caution"
+text = "Manages encrypted disks."
+  [[cmd.rule]]
+  sub = ["luksFormat", "erase", "luksErase", "reencrypt"]
+  risk = "danger"
+  hard = true
+  text = "Erases encryption on {target}. Data is gone."
+  pending = "Formats an encrypted disk. Data is gone."
+  [[cmd.rule]]
+  sub = ["open", "luksOpen", "close", "status", "luksDump"]
+  risk = "known"
+  text = "Opens, closes or inspects an encrypted disk."
+
+[[cmd]]
+name = "mount"
+aliases = ["umount", "swapon", "swapoff", "losetup"]
+risk = "caution"
+text = "Attaches or detaches filesystem {target}."
+pending = "Attaches or detaches a filesystem."
+
+[[cmd]]
+name = "lsblk"
+aliases = ["blkid", "findmnt", "smartctl", "hdparm"]
+category = "read"
+risk = "known"
+text = "Shows disks and partitions."
+
+[[cmd]]
+name = "fsck"
+aliases = ["e2fsck", "xfs_repair", "btrfsck"]
+risk = "caution"
+text = "Repairs filesystem {target}. Unmount it first."
+pending = "Checks and repairs a filesystem."
+
+[[cmd]]
+name = "sync"
+category = "info"
+risk = "known"
+text = "Flushes pending writes to disk."
+
+# --- boot, kernel, security ---
+
+[[cmd]]
+name = "grub-install"
+aliases = ["grub2-install", "update-grub", "grub-mkconfig", "grub2-mkconfig", "efibootmgr", "bootctl", "dracut", "mkinitcpio", "update-initramfs"]
+risk = "danger"
+text = "Changes how this machine boots."
+  [[cmd.rule]]
+  flags_any = ["v", "list"]
+  risk = "known"
+  text = "Shows boot settings."
+
+[[cmd]]
+name = "modprobe"
+aliases = ["insmod", "rmmod"]
+risk = "caution"
+text = "Loads or removes kernel module {target}."
+pending = "Loads or removes kernel modules."
+
+[[cmd]]
+name = "sysctl"
+risk = "known"
+text = "Shows kernel settings."
+  [[cmd.rule]]
+  flags_any = ["w", "p", "system"]
+  risk = "caution"
+  text = "Changes kernel settings."
+  [[cmd.rule]]
+  args_any = ["*=*"]
+  risk = "caution"
+  text = "Changes kernel setting {target}."
+  pending = "Changes kernel settings."
+
+[[cmd]]
+name = "setenforce"
+risk = "caution"
+text = "Changes SELinux enforcement."
+  [[cmd.rule]]
+  args_any = ["0", "Permissive", "permissive"]
+  risk = "danger"
+  text = "Turns off SELinux protection."
+
+[[cmd]]
+name = "chroot"
+aliases = ["arch-chroot", "systemd-nspawn"]
+risk = "caution"
+text = "Runs commands inside another root folder."
+
+[[cmd]]
+name = "hostnamectl"
+aliases = ["timedatectl", "localectl", "loginctl"]
+risk = "known"
+text = "Shows or changes system identity settings."
+  [[cmd.rule]]
+  args_any = ["set-*", "terminate-*", "kill-*"]
+  risk = "caution"
+  text = "Changes system settings."
+
+# --- users ---
+
+[[cmd]]
+name = "useradd"
+aliases = ["adduser", "groupadd", "addgroup"]
+risk = "caution"
+text = "Creates account {target}."
+pending = "Creates a user or group."
+
+[[cmd]]
+name = "userdel"
+aliases = ["deluser", "groupdel", "delgroup"]
+risk = "danger"
+text = "Deletes account {target}."
+pending = "Deletes a user or group."
+  [[cmd.rule]]
+  flags_any = ["r", "remove", "remove-home"]
+  risk = "danger"
+  text = "Deletes account {target} and its home folder."
+  pending = "Deletes a user and their files."
+
+[[cmd]]
+name = "usermod"
+aliases = ["groupmod", "gpasswd", "chage"]
+takes_value = ["G", "g", "s", "d", "l", "u", "e"]
+risk = "caution"
+text = "Changes account settings for {target}."
+pending = "Changes user account settings."
+  [[cmd.rule]]
+  flags_any = ["G"]
+  flags_none = ["a"]
+  risk = "danger"
+  text = "Replaces all groups of {target}. Can lose sudo."
+  pending = "Replaces all groups. Can lose admin rights."
+
+[[cmd]]
+name = "passwd"
+aliases = ["chpasswd", "chsh", "chfn"]
+risk = "caution"
+text = "Changes account password or login settings."
+  [[cmd.rule]]
+  flags_any = ["d", "delete"]
+  risk = "danger"
+  text = "Removes the password. Anyone can log in."
+  [[cmd.rule]]
+  flags_any = ["l", "lock"]
+  risk = "caution"
+  text = "Locks the account."
+
+[[cmd]]
+name = "visudo"
+risk = "caution"
+text = "Edits who can use sudo."
+
+# --- scheduling ---
+
+[[cmd]]
+name = "crontab"
+risk = "known"
+text = "Shows or edits scheduled jobs."
+  [[cmd.rule]]
+  flags_any = ["r"]
+  risk = "danger"
+  text = "Deletes all your scheduled jobs. No confirmation."
+  [[cmd.rule]]
+  flags_any = ["e"]
+  risk = "caution"
+  text = "Edits your scheduled jobs."
+
+[[cmd]]
+name = "at"
+aliases = ["batch", "atrm"]
+risk = "caution"
+text = "Schedules a command to run later."
+
+# --- shell builtins and misc ---
+
+[[cmd]]
+name = "export"
+aliases = ["set", "unset", "declare", "typeset", "local", "readonly", "shopt", "setopt", "unsetopt", "ulimit", "umask"]
+category = "info"
+risk = "known"
+text = "Changes a setting of this shell."
+
+[[cmd]]
+name = "alias"
+aliases = ["unalias", "abbr", "bind", "bindkey", "complete", "compdef", "hash", "rehash"]
+category = "info"
+risk = "known"
+text = "Changes shortcuts in this shell."
+
+[[cmd]]
+name = "history"
+aliases = ["fc"]
+category = "read"
+risk = "known"
+text = "Shows your command history."
+  [[cmd.rule]]
+  flags_any = ["c", "d"]
+  risk = "caution"
+  text = "Deletes command history."
+
+[[cmd]]
+name = "exit"
+aliases = ["logout"]
+category = "info"
+risk = "known"
+text = "Closes this shell."
+
+[[cmd]]
+name = "clear"
+aliases = ["reset", "tput", "stty"]
+category = "info"
+risk = "known"
+text = "Clears or resets the terminal."
+
+[[cmd]]
+name = "man"
+aliases = ["info", "help", "tldr", "apropos", "whatis", "which", "whereis", "type", "command"]
+category = "info"
+risk = "known"
+text = "Shows help for {target}."
+pending = "Shows help or where a command lives."
+
+[[cmd]]
+name = "sleep"
+aliases = ["true", "false", "yes", "seq", "test", "[", "[[", "wait", "jobs", "fg", "bg", "read", "shift", "return", "break", "continue", "trap", "let", "expr", "bc", "dc"]
+category = "info"
+risk = "known"
+text = "Runs a simple shell helper."
+
+[[cmd]]
+name = "tmux"
+aliases = ["screen", "zellij", "byobu"]
+category = "info"
+risk = "known"
+text = "Opens a terminal multiplexer."
+  [[cmd.rule]]
+  args_any = ["kill-server", "kill-session"]
+  risk = "caution"
+  text = "Kills terminal sessions and their programs."
+
+[[cmd]]
+name = "gsettings"
+aliases = ["dconf", "xdg-settings", "xdg-mime", "update-alternatives", "alternatives"]
+risk = "known"
+text = "Reads or changes desktop settings."
+  [[cmd.rule]]
+  args_any = ["reset", "reset-recursively", "set", "write", "--set", "--install", "--remove", "--config"]
+  risk = "caution"
+  text = "Changes desktop or system defaults."
+
+[[cmd]]
+name = "bash"
+aliases = ["sh", "zsh", "dash", "ksh", "fish", "ash", "nu", "elvish", "xonsh"]
+category = "info"
+target = "first"
+risk = "known"
+text = "Runs script {target} in a new shell."
+pending = "Starts a new shell."
+  [[cmd.rule]]
+  flags_any = ["c"]
+  risk = "caution"
+  text = "Runs a command string in a new shell."

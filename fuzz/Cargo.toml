@@ -1,0 +1,19 @@
+[package]
+name = "beforerunit-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+beforerunit-core = { path = "../crates/beforerunit-core", default-features = false }
+
+[[bin]]
+name = "lex_analyze"
+path = "fuzz_targets/lex_analyze.rs"
+test = false
+doc = false
+bench = false

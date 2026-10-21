@@ -1,0 +1,37 @@
+[package]
+name = "beforerunit"
+description = "Live command risk line for Linux shells: a badge and a plain-English summary under your prompt, before you press Enter"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+readme = "../../README.md"
+keywords = ["shell", "terminal", "safety", "cli", "zsh"]
+categories = ["command-line-utilities"]
+
+[[bin]]
+name = "beforerunit"
+path = "src/main.rs"
+
+[dependencies]
+beforerunit-core = { workspace = true, features = ["compile"] }
+beforerunit-ai = { workspace = true }
+clap = { version = "4", features = ["derive"] }
+tokio = { workspace = true }
+tokio-util = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+reqwest = { workspace = true }
+futures-util = { workspace = true }
+libc = { workspace = true }
+anyhow = "1"
+ratatui = "0.29"
+crossterm = "0.28"
+tui-big-text = "0.7"
+redb = "2"
+moka = { version = "0.12", features = ["sync"] }
+keyring = { version = "3", features = ["async-secret-service", "tokio", "crypto-rust"] }
+zip = { version = "2", default-features = false, features = ["deflate"] }

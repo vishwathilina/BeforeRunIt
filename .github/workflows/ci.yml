@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  check:
+    name: fmt, clippy, test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo fmt --all --check
+      - run: cargo clippy --workspace --all-targets -- -D warnings
+      - run: cargo test --workspace
+      - name: Benchmarks compile
+        run: cargo bench --workspace --no-run
+
+  msrv:
+    name: minimum Rust version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.82
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo check --workspace
+
+  perf:
+    name: performance budgets
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Install shells
+        run: sudo apt-get update && sudo apt-get install -y zsh fish
+      - name: Build
+        run: |
+          cargo build --release
+          cargo build --profile release-bash -p beforerunit-bash
+      - name: Shell scripts parse
+        run: |
+          target/release/beforerunit init bash | bash -n
+          target/release/beforerunit init zsh | zsh -n
+          target/release/beforerunit init fish | fish --no-execute
+      # Shared runners are noisy: time budgets get 2x slack, size and memory
+      # budgets stay exact.
+      - name: Budgets
+        run: target/release/beforerunit bench --pty --strict --slack 2
+
+  fuzz:
+    name: lexer fuzz (short)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@nightly
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo install cargo-fuzz --locked
+      - run: |
+          cd fuzz
+          for t in $(cargo fuzz list); do
+            cargo fuzz run "$t" -- -max_total_time=60
+          done

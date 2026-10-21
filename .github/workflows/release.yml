@@ -1,0 +1,94 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: build ${{ matrix.arch }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            pkg_arch: amd64
+          - arch: aarch64
+            pkg_arch: arm64
+    env:
+      DIST: dist/beforerunit-${{ matrix.arch }}-linux
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.arch }}-unknown-linux-musl,${{ matrix.arch }}-unknown-linux-gnu
+      - uses: mlugg/setup-zig@v1
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.arch }}
+      - run: cargo install cargo-zigbuild --locked
+
+      # The binary is static (musl) so it runs on any distro. The bash builtin
+      # is loaded into bash itself, so it links against glibc 2.17 for the
+      # widest reach.
+      - name: Build binary
+        run: cargo zigbuild --release --target ${{ matrix.arch }}-unknown-linux-musl
+      - name: Build bash builtin
+        run: cargo zigbuild --profile release-bash -p beforerunit-bash --target ${{ matrix.arch }}-unknown-linux-gnu.2.17
+
+      - name: Stage
+        run: |
+          mkdir -p "$DIST"
+          cp target/${{ matrix.arch }}-unknown-linux-musl/release/beforerunit "$DIST/"
+          cp target/${{ matrix.arch }}-unknown-linux-gnu/release-bash/libbeforerunit_bash.so "$DIST/"
+          cp README.md LICENSE-MIT LICENSE-APACHE install.sh "$DIST/"
+          size=$(stat -c %s "$DIST/beforerunit")
+          echo "binary size: $size bytes"
+          test "$size" -lt 8388608
+          tar -C dist -czf "dist/beforerunit-${{ matrix.arch }}-linux.tar.gz" "beforerunit-${{ matrix.arch }}-linux"
+
+      - name: Smoke test
+        if: matrix.arch == 'x86_64'
+        run: |
+          "$DIST/beforerunit" --version
+          "$DIST/beforerunit" explain --no-ai -- git status
+          bash -c "enable -f $DIST/libbeforerunit_bash.so beforerunit_query && echo builtin ok"
+
+      - name: Packages
+        run: |
+          echo 'deb [trusted=yes] https://repo.goreleaser.com/apt/ /' | sudo tee /etc/apt/sources.list.d/goreleaser.list
+          sudo apt-get update && sudo apt-get install -y nfpm
+          export VERSION="${GITHUB_REF_NAME#v}" ARCH=${{ matrix.pkg_arch }}
+          nfpm pkg -f packaging/nfpm.yaml -p deb -t dist/
+          nfpm pkg -f packaging/nfpm.yaml -p rpm -t dist/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist-${{ matrix.arch }}
+          path: |
+            dist/*.tar.gz
+            dist/*.deb
+            dist/*.rpm
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Checksums
+        run: cd dist && sha256sum * > SHA256SUMS
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" dist/* install.sh --title "BeforeRunIt $GITHUB_REF_NAME" --generate-notes

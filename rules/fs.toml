@@ -1,0 +1,587 @@
+# Filesystem commands. Summaries: at most 10 words, no emoji.
+# Rules are checked top to bottom; the first match wins, so put specific rules first.
+
+[[cmd]]
+name = "rm"
+aliases = ["unlink"]
+escalate = "delete"
+long = { recursive = "r", R = "r", force = "f", dir = "d", interactive = "i", verbose = "v" }
+risk = "caution"
+text = "Deletes {target}. Skips Trash."
+pending = "Deletes files. Waiting for file name..."
+  [[cmd.rule]]
+  flags_all = ["r", "f"]
+  risk = "danger"
+  text = "Deletes {target} forever. Skips Trash."
+  pending = "Force-deletes a folder forever. No confirmation."
+  [[cmd.rule]]
+  flags_any = ["r"]
+  risk = "danger"
+  text = "Deletes {target} and everything inside."
+  pending = "Deletes a folder and everything inside."
+  [[cmd.rule]]
+  flags_any = ["f"]
+  risk = "caution"
+  text = "Force-deletes {target}. No confirmation."
+  pending = "Force-deletes files. No confirmation."
+  [[cmd.rule]]
+  flags_any = ["i"]
+  risk = "caution"
+  text = "Deletes {target}, asking first."
+  pending = "Deletes files, asking before each one."
+
+[[cmd]]
+name = "rmdir"
+escalate = "delete"
+risk = "known"
+text = "Removes empty folder {target}."
+pending = "Removes an empty folder."
+
+[[cmd]]
+name = "shred"
+escalate = "delete"
+long = { remove = "u", force = "f", zero = "z", iterations = "n" }
+takes_value = ["n", "s"]
+risk = "danger"
+text = "Destroys {target} beyond recovery."
+pending = "Overwrites files so they can never be recovered."
+
+[[cmd]]
+name = "wipefs"
+escalate = "disk"
+long = { all = "a", force = "f" }
+risk = "danger"
+hard = true
+text = "Erases filesystem signatures on {target}."
+pending = "Erases disk signatures. Data becomes unreadable."
+
+[[cmd]]
+name = "truncate"
+takes_value = ["s", "r"]
+long = { size = "s" }
+escalate = "modify"
+risk = "caution"
+text = "Cuts {target} to a new size. Data lost."
+pending = "Resizes files, cutting off data."
+
+[[cmd]]
+name = "mv"
+escalate = "modify"
+long = { force = "f", interactive = "i", "no-clobber" = "n", "target-directory" = "t" }
+takes_value = ["t", "S"]
+risk = "caution"
+text = "Moves or renames {target}. May overwrite."
+pending = "Moves or renames files."
+  [[cmd.rule]]
+  flags_any = ["n", "i"]
+  risk = "known"
+  text = "Moves or renames {target} safely."
+  pending = "Moves files without overwriting."
+
+[[cmd]]
+name = "cp"
+long = { recursive = "r", force = "f", archive = "a", interactive = "i", "no-clobber" = "n" }
+takes_value = ["t", "S"]
+risk = "known"
+text = "Copies {target}."
+pending = "Copies files."
+  [[cmd.rule]]
+  flags_any = ["f"]
+  risk = "caution"
+  text = "Copies {target}, overwriting without asking."
+  pending = "Copies files, overwriting without asking."
+
+[[cmd]]
+name = "rsync"
+takes_value = ["e", "f", "exclude", "include", "filter", "rsh"]
+risk = "caution"
+text = "Syncs {target}. Can overwrite files."
+pending = "Syncs files between folders or machines."
+  [[cmd.rule]]
+  flags_any = ["delete", "delete-before", "delete-after", "delete-during", "delete-excluded", "remove-source-files"]
+  risk = "danger"
+  text = "Syncs {target} and deletes extra files."
+  pending = "Mirrors folders, deleting files not in source."
+  [[cmd.rule]]
+  flags_any = ["n", "dry-run"]
+  risk = "known"
+  text = "Shows what syncing {target} would change."
+  pending = "Dry run. Shows changes without making them."
+
+[[cmd]]
+name = "ln"
+long = { symbolic = "s", force = "f" }
+risk = "known"
+text = "Creates a link to {target}."
+pending = "Creates a file link."
+  [[cmd.rule]]
+  flags_any = ["f"]
+  risk = "caution"
+  text = "Creates a link, replacing existing {target}."
+  pending = "Creates a link, replacing existing files."
+
+[[cmd]]
+name = "mkdir"
+risk = "known"
+text = "Creates folder {target}."
+pending = "Creates a folder."
+
+[[cmd]]
+name = "touch"
+risk = "known"
+text = "Creates or updates {target}."
+pending = "Creates empty files or updates timestamps."
+
+[[cmd]]
+name = "chmod"
+escalate = "modify"
+target = "after:1"
+long = { recursive = "R" }
+risk = "caution"
+text = "Changes permissions of {target} to {arg1}."
+pending = "Changes file permissions."
+  [[cmd.rule]]
+  flags_any = ["R"]
+  args_any = ["777", "a+rwx", "0777", "ugo+rwx", "a=rwx", "o+w", "666"]
+  risk = "danger"
+  text = "Lets anyone change everything in {target}."
+  pending = "Gives everyone full access, recursively."
+  [[cmd.rule]]
+  args_any = ["777", "a+rwx", "0777", "ugo+rwx", "a=rwx", "666", "o+w"]
+  risk = "danger"
+  text = "Lets anyone on this machine change {target}."
+  pending = "Gives everyone full access."
+  [[cmd.rule]]
+  flags_any = ["R"]
+  risk = "caution"
+  text = "Changes permissions of everything in {target}."
+  pending = "Changes permissions recursively."
+  [[cmd.rule]]
+  args_any = ["+x", "u+x", "a+x", "755", "0755", "700", "750"]
+  risk = "known"
+  text = "Makes {target} runnable."
+  pending = "Makes files runnable."
+
+[[cmd]]
+name = "chown"
+escalate = "modify"
+target = "after:1"
+long = { recursive = "R" }
+risk = "caution"
+text = "Changes owner of {target} to {arg1}."
+pending = "Changes who owns files."
+  [[cmd.rule]]
+  flags_any = ["R"]
+  risk = "caution"
+  text = "Changes owner of everything in {target}."
+  pending = "Changes ownership recursively."
+
+[[cmd]]
+name = "chgrp"
+escalate = "modify"
+target = "after:1"
+long = { recursive = "R" }
+risk = "caution"
+text = "Changes group of {target} to {arg1}."
+pending = "Changes the group of files."
+
+[[cmd]]
+name = "chattr"
+escalate = "modify"
+target = "after:1"
+risk = "caution"
+text = "Changes special attributes of {target}."
+pending = "Changes low-level file attributes."
+
+[[cmd]]
+name = "setfacl"
+escalate = "modify"
+risk = "caution"
+text = "Changes access rules of {target}."
+pending = "Changes file access control lists."
+
+[[cmd]]
+name = "find"
+bundle = false
+takes_value = ["name", "iname", "type", "path", "ipath", "regex", "size", "mtime", "mmin", "atime", "ctime", "newer", "user", "group", "perm", "maxdepth", "mindepth", "printf", "fprint", "exec", "execdir"]
+target = "first"
+risk = "known"
+text = "Searches for files in {target}."
+pending = "Searches for files."
+  [[cmd.rule]]
+  flags_any = ["delete"]
+  risk = "danger"
+  text = "Deletes every matching file in {target}."
+  pending = "Deletes every matching file."
+
+[[cmd]]
+name = "ls"
+aliases = ["dir", "vdir"]
+category = "read"
+risk = "known"
+text = "Lists files in {target}."
+pending = "Lists files in this folder."
+
+[[cmd]]
+name = "eza"
+aliases = ["exa", "lsd"]
+category = "read"
+risk = "known"
+text = "Lists files in {target}."
+pending = "Lists files in this folder."
+
+[[cmd]]
+name = "tree"
+category = "read"
+risk = "known"
+text = "Shows the folder tree of {target}."
+pending = "Shows the folder tree."
+
+[[cmd]]
+name = "cd"
+aliases = ["pushd", "popd"]
+category = "read"
+risk = "known"
+text = "Moves into {target}."
+pending = "Changes the current folder."
+
+[[cmd]]
+name = "pwd"
+category = "read"
+risk = "known"
+text = "Shows the current folder."
+
+[[cmd]]
+name = "cat"
+aliases = ["tac", "nl"]
+category = "read"
+risk = "known"
+text = "Prints the contents of {target}."
+pending = "Prints file contents."
+
+[[cmd]]
+name = "bat"
+aliases = ["batcat"]
+category = "read"
+risk = "known"
+text = "Shows {target} with highlighting."
+pending = "Shows files with syntax highlighting."
+
+[[cmd]]
+name = "less"
+aliases = ["more", "most"]
+category = "read"
+risk = "known"
+text = "Opens {target} for reading."
+pending = "Shows text one page at a time."
+
+[[cmd]]
+name = "head"
+takes_value = ["n", "c"]
+category = "read"
+risk = "known"
+text = "Shows the start of {target}."
+pending = "Shows the first lines."
+
+[[cmd]]
+name = "tail"
+takes_value = ["n", "c"]
+category = "read"
+risk = "known"
+text = "Shows the end of {target}."
+pending = "Shows the last lines."
+
+[[cmd]]
+name = "wc"
+category = "read"
+risk = "known"
+text = "Counts lines and words in {target}."
+pending = "Counts lines, words and bytes."
+
+[[cmd]]
+name = "du"
+category = "read"
+takes_value = ["d", "max-depth"]
+risk = "known"
+text = "Shows disk space used by {target}."
+pending = "Shows how much space folders use."
+
+[[cmd]]
+name = "df"
+category = "read"
+risk = "known"
+text = "Shows free disk space."
+
+[[cmd]]
+name = "stat"
+aliases = ["file", "realpath", "readlink", "basename", "dirname", "namei"]
+category = "read"
+risk = "known"
+text = "Shows details about {target}."
+pending = "Shows file details."
+
+[[cmd]]
+name = "grep"
+aliases = ["egrep", "fgrep", "rg", "ag", "ack"]
+takes_value = ["e", "f", "A", "B", "C", "m", "include", "exclude", "g", "t"]
+target = "first"
+category = "read"
+risk = "known"
+text = "Searches text for {target}."
+pending = "Searches text for a pattern."
+
+[[cmd]]
+name = "fd"
+aliases = ["fdfind", "locate", "plocate"]
+category = "read"
+risk = "known"
+text = "Finds files named {target}."
+pending = "Finds files by name."
+
+[[cmd]]
+name = "sort"
+aliases = ["uniq", "cut", "tr", "paste", "column", "fold", "fmt", "rev", "shuf", "comm", "join"]
+takes_value = ["k", "t", "d", "f", "o"]
+category = "read"
+risk = "known"
+text = "Transforms text from {target}."
+pending = "Transforms text."
+  [[cmd.rule]]
+  flags_any = ["o"]
+  risk = "caution"
+  text = "Sorts text and overwrites the output file."
+  pending = "Sorts text and overwrites the output file."
+
+[[cmd]]
+name = "sed"
+takes_value = ["e", "f"]
+target = "after:1"
+category = "read"
+risk = "known"
+text = "Edits text from {target}."
+pending = "Edits text with a pattern."
+  [[cmd.rule]]
+  flags_any = ["i", "in-place"]
+  risk = "caution"
+  text = "Edits {target} in place. No undo."
+  pending = "Edits files in place. No undo."
+
+[[cmd]]
+name = "awk"
+aliases = ["gawk", "mawk", "nawk"]
+takes_value = ["F", "v", "f"]
+target = "after:1"
+category = "read"
+risk = "known"
+text = "Processes text from {target}."
+pending = "Processes text with a small program."
+  [[cmd.rule]]
+  args_any = ["*system(*"]
+  risk = "caution"
+  text = "Processes text and runs shell commands."
+  pending = "Runs shell commands from awk."
+
+[[cmd]]
+name = "diff"
+aliases = ["cmp", "colordiff", "delta", "difft"]
+category = "read"
+risk = "known"
+text = "Compares {target}."
+pending = "Compares files."
+
+[[cmd]]
+name = "tee"
+escalate = "modify"
+long = { append = "a" }
+risk = "caution"
+text = "Writes output into {target}, replacing it."
+pending = "Copies output into files."
+  [[cmd.rule]]
+  flags_any = ["a"]
+  risk = "known"
+  text = "Appends output to {target}."
+  pending = "Appends output to files."
+
+[[cmd]]
+name = "tar"
+bundle = true
+takes_value = ["f", "C", "file", "directory"]
+long = { extract = "x", create = "c", list = "t", file = "f", directory = "C" }
+target = "flag:f"
+risk = "known"
+text = "Works with archive {target}."
+pending = "Packs or unpacks archives."
+  [[cmd.rule]]
+  sub = ["xf", "xvf", "xzf", "xzvf", "xvzf", "xjf", "xjvf", "xJf", "xJvf", "xaf", "xvJf", "xvjf"]
+  target = "first"
+  risk = "caution"
+  text = "Unpacks {target}. Can overwrite files here."
+  pending = "Unpacks an archive. Can overwrite files."
+  [[cmd.rule]]
+  sub = ["cf", "cvf", "czf", "czvf", "cvzf", "cjf", "cJf", "caf"]
+  target = "first"
+  risk = "known"
+  text = "Creates archive {target}."
+  pending = "Creates an archive."
+  [[cmd.rule]]
+  sub = ["tf", "tvf", "tzf", "tzvf"]
+  target = "first"
+  risk = "known"
+  text = "Lists what is inside {target}."
+  pending = "Lists archive contents."
+  [[cmd.rule]]
+  flags_any = ["x"]
+  risk = "caution"
+  text = "Unpacks {target}. Can overwrite files here."
+  pending = "Unpacks an archive. Can overwrite files."
+  [[cmd.rule]]
+  flags_any = ["c"]
+  risk = "known"
+  text = "Creates archive {target}."
+  pending = "Creates an archive."
+  [[cmd.rule]]
+  flags_any = ["t"]
+  risk = "known"
+  text = "Lists what is inside {target}."
+  pending = "Lists archive contents."
+
+[[cmd]]
+name = "zip"
+aliases = ["7z", "7za", "rar"]
+risk = "known"
+text = "Packs files into {target}."
+pending = "Creates a compressed archive."
+
+[[cmd]]
+name = "unzip"
+aliases = ["unrar"]
+takes_value = ["d"]
+risk = "caution"
+text = "Unpacks {target}. Can overwrite files here."
+pending = "Unpacks an archive."
+  [[cmd.rule]]
+  flags_any = ["l"]
+  risk = "known"
+  text = "Lists what is inside {target}."
+  pending = "Lists archive contents."
+
+[[cmd]]
+name = "gzip"
+aliases = ["bzip2", "xz", "zstd", "lz4", "brotli"]
+risk = "known"
+text = "Compresses {target}, replacing the original."
+pending = "Compresses files."
+  [[cmd.rule]]
+  flags_any = ["d", "decompress"]
+  risk = "known"
+  text = "Decompresses {target}."
+  pending = "Decompresses files."
+
+[[cmd]]
+name = "gunzip"
+aliases = ["bunzip2", "unxz", "unzstd", "zcat", "xzcat", "bzcat"]
+risk = "known"
+text = "Decompresses {target}."
+pending = "Decompresses files."
+
+[[cmd]]
+name = "mktemp"
+category = "read"
+risk = "known"
+text = "Creates a temporary file."
+
+[[cmd]]
+name = "install"
+takes_value = ["m", "o", "g", "t", "mode", "owner", "group"]
+risk = "caution"
+text = "Copies {target} into place with permissions."
+pending = "Copies files and sets permissions."
+
+[[cmd]]
+name = "trash"
+aliases = ["trash-put", "gio", "kioclient5", "trash-cli"]
+risk = "known"
+text = "Moves {target} to Trash. Can be restored."
+pending = "Moves files to Trash. Can be restored."
+
+[[cmd]]
+name = "trash-empty"
+risk = "danger"
+text = "Empties the Trash forever."
+
+[[cmd]]
+name = "nano"
+aliases = ["vim", "vi", "nvim", "emacs", "micro", "hx", "helix", "kak", "ed", "pico", "joe"]
+category = "read"
+risk = "known"
+text = "Opens {target} in a text editor."
+pending = "Opens a text editor."
+
+[[cmd]]
+name = "code"
+aliases = ["codium", "subl", "zed", "gedit", "kate", "cursor"]
+category = "read"
+risk = "known"
+text = "Opens {target} in an editor."
+pending = "Opens an editor."
+
+[[cmd]]
+name = "xdg-open"
+aliases = ["open"]
+category = "read"
+risk = "known"
+text = "Opens {target} with the default app."
+pending = "Opens a file with the default app."
+
+[[cmd]]
+name = "echo"
+aliases = ["printf"]
+category = "read"
+risk = "known"
+text = "Prints text."
+
+[[cmd]]
+name = "jq"
+aliases = ["yq", "gron", "jless", "fx"]
+target = "after:1"
+category = "read"
+risk = "known"
+text = "Queries JSON or YAML data."
+
+[[cmd]]
+name = "sha256sum"
+aliases = ["sha1sum", "sha512sum", "md5sum", "b2sum", "cksum", "b3sum"]
+category = "read"
+risk = "known"
+text = "Computes checksums of {target}."
+pending = "Computes file checksums."
+
+[[cmd]]
+name = "xxd"
+aliases = ["hexdump", "od", "strings", "hexyl"]
+category = "read"
+risk = "known"
+text = "Shows raw bytes of {target}."
+pending = "Shows raw file bytes."
+
+[[cmd]]
+name = "split"
+aliases = ["csplit"]
+risk = "known"
+text = "Splits {target} into pieces."
+pending = "Splits a file into pieces."
+
+[[cmd]]
+name = "fzf"
+aliases = ["sk", "zoxide", "z"]
+category = "read"
+risk = "known"
+text = "Opens an interactive picker."
+
+[[cmd]]
+name = "srm"
+aliases = ["wipe"]
+escalate = "delete"
+risk = "danger"
+text = "Securely destroys {target}. Unrecoverable."
+pending = "Securely destroys files. Unrecoverable."

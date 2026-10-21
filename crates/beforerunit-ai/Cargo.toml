@@ -1,0 +1,21 @@
+[package]
+name = "beforerunit-ai"
+description = "OpenAI-compatible risk review client for BeforeRunIt (Ollama, Groq, OpenRouter, LM Studio, ...)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+beforerunit-core = { workspace = true, default-features = false }
+reqwest = { workspace = true }
+tokio = { workspace = true }
+futures-util = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+regex = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true }

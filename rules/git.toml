@@ -1,0 +1,273 @@
+# Version control.
+
+[[cmd]]
+name = "git"
+takes_value = ["C", "c", "git-dir", "work-tree", "m", "message", "b", "B", "o", "u"]
+long = { force = "f", delete = "d", message = "m" }
+risk = "known"
+text = "Runs git {sub}."
+pending = "Runs a git command."
+  # push
+  [[cmd.rule]]
+  sub = "push"
+  flags_any = ["force-with-lease", "force-if-includes"]
+  target = "last"
+  risk = "caution"
+  text = "Force-pushes {target}, only if nobody else pushed."
+  pending = "Force-pushes, only if nobody else pushed."
+  [[cmd.rule]]
+  sub = "push"
+  flags_any = ["f", "mirror"]
+  target = "last"
+  risk = "danger"
+  text = "Overwrites remote history of {target}. Others lose work."
+  pending = "Overwrites remote history. Others can lose work."
+  [[cmd.rule]]
+  sub = "push"
+  args_any = ["+*"]
+  target = "last"
+  risk = "danger"
+  text = "Force-pushes {target}, overwriting remote history."
+  pending = "Force-pushes, overwriting remote history."
+  [[cmd.rule]]
+  sub = "push"
+  flags_any = ["d"]
+  target = "last"
+  risk = "danger"
+  text = "Deletes branch {target} on the remote."
+  pending = "Deletes a branch on the remote."
+  [[cmd.rule]]
+  sub = "push"
+  args_any = [":*"]
+  target = "last"
+  risk = "danger"
+  text = "Deletes remote branch {target}."
+  pending = "Deletes a branch on the remote."
+  [[cmd.rule]]
+  sub = "push"
+  target = "last"
+  risk = "caution"
+  text = "Uploads your commits to {target}."
+  pending = "Uploads your commits to the remote."
+  # reset
+  [[cmd.rule]]
+  sub = "reset"
+  flags_any = ["hard"]
+  risk = "danger"
+  text = "Throws away all uncommitted changes. No undo."
+  pending = "Throws away all uncommitted changes. No undo."
+  [[cmd.rule]]
+  sub = "reset"
+  flags_any = ["merge", "keep"]
+  risk = "caution"
+  text = "Resets the branch, keeping some local changes."
+  [[cmd.rule]]
+  sub = "reset"
+  risk = "caution"
+  text = "Moves the branch pointer. Keeps your files."
+  # clean
+  [[cmd.rule]]
+  sub = "clean"
+  flags_any = ["n", "dry-run"]
+  risk = "known"
+  text = "Lists untracked files that would be deleted."
+  [[cmd.rule]]
+  sub = "clean"
+  flags_any = ["x", "X"]
+  risk = "danger"
+  text = "Deletes untracked and ignored files forever."
+  [[cmd.rule]]
+  sub = "clean"
+  flags_any = ["f", "force"]
+  risk = "danger"
+  text = "Deletes untracked files forever."
+  [[cmd.rule]]
+  sub = "clean"
+  risk = "caution"
+  text = "Removes untracked files."
+  # discarding work
+  [[cmd.rule]]
+  sub = ["checkout", "restore"]
+  args_any = [".", "*", ":/"]
+  risk = "danger"
+  text = "Discards all uncommitted changes in your files."
+  [[cmd.rule]]
+  sub = "checkout"
+  flags_any = ["f"]
+  risk = "danger"
+  text = "Switches branch, discarding local changes."
+  [[cmd.rule]]
+  sub = "restore"
+  target = "positional"
+  risk = "caution"
+  text = "Discards uncommitted changes in {target}."
+  pending = "Discards uncommitted changes in files."
+  [[cmd.rule]]
+  sub = "checkout"
+  flags_any = ["b", "B"]
+  risk = "known"
+  text = "Creates and switches to a new branch."
+  [[cmd.rule]]
+  sub = ["checkout", "switch"]
+  target = "first"
+  risk = "known"
+  text = "Switches to {target}."
+  pending = "Switches branches."
+  # branches
+  [[cmd.rule]]
+  sub = "branch"
+  flags_any = ["D"]
+  risk = "danger"
+  text = "Force-deletes branch {target}, even unmerged work."
+  pending = "Force-deletes a branch, even unmerged work."
+  [[cmd.rule]]
+  sub = "branch"
+  flags_all = ["d", "f"]
+  risk = "danger"
+  text = "Force-deletes branch {target}, even unmerged work."
+  pending = "Force-deletes a branch, even unmerged work."
+  [[cmd.rule]]
+  sub = "branch"
+  flags_any = ["d"]
+  risk = "caution"
+  text = "Deletes branch {target} if fully merged."
+  pending = "Deletes a merged branch."
+  [[cmd.rule]]
+  sub = "branch"
+  flags_any = ["m", "M"]
+  risk = "caution"
+  text = "Renames a branch."
+  [[cmd.rule]]
+  sub = "branch"
+  risk = "known"
+  text = "Lists or creates branches."
+  # stash
+  [[cmd.rule]]
+  sub = ["stash drop", "stash clear"]
+  risk = "danger"
+  text = "Deletes saved stashes forever."
+  [[cmd.rule]]
+  sub = "stash"
+  risk = "known"
+  text = "Saves uncommitted changes aside for later."
+  # history rewriting
+  [[cmd.rule]]
+  sub = ["filter-branch", "filter-repo"]
+  risk = "danger"
+  text = "Rewrites the entire repository history."
+  [[cmd.rule]]
+  sub = "reflog expire"
+  risk = "danger"
+  text = "Erases the safety log used to recover commits."
+  [[cmd.rule]]
+  sub = "rebase"
+  flags_any = ["abort", "continue", "skip"]
+  risk = "known"
+  text = "Controls a rebase in progress."
+  [[cmd.rule]]
+  sub = "rebase"
+  target = "first"
+  risk = "caution"
+  text = "Rewrites your commits on top of {target}."
+  pending = "Rewrites commit history."
+  [[cmd.rule]]
+  sub = "commit"
+  flags_any = ["amend"]
+  risk = "caution"
+  text = "Rewrites the last commit."
+  [[cmd.rule]]
+  sub = "commit"
+  risk = "known"
+  text = "Saves staged changes as a commit."
+  [[cmd.rule]]
+  sub = "gc"
+  flags_any = ["prune", "aggressive"]
+  risk = "caution"
+  text = "Cleans up the repo and drops unreachable commits."
+  [[cmd.rule]]
+  sub = ["pull"]
+  flags_any = ["rebase", "r"]
+  risk = "caution"
+  text = "Downloads changes and rebases your commits."
+  [[cmd.rule]]
+  sub = ["pull"]
+  risk = "known"
+  text = "Downloads and merges remote changes."
+  [[cmd.rule]]
+  sub = ["merge"]
+  flags_any = ["abort"]
+  risk = "known"
+  text = "Cancels the merge in progress."
+  [[cmd.rule]]
+  sub = ["merge"]
+  target = "first"
+  risk = "known"
+  text = "Merges {target} into the current branch."
+  pending = "Merges another branch into this one."
+  [[cmd.rule]]
+  sub = ["cherry-pick", "revert"]
+  risk = "known"
+  text = "Applies or undoes a commit as a new commit."
+  [[cmd.rule]]
+  sub = ["add", "stage"]
+  risk = "known"
+  text = "Stages {target} for the next commit."
+  pending = "Stages changes for the next commit."
+  [[cmd.rule]]
+  sub = "rm"
+  flags_any = ["cached"]
+  risk = "known"
+  text = "Stops tracking {target}. Keeps the file."
+  pending = "Stops tracking files. Keeps them on disk."
+  [[cmd.rule]]
+  sub = "rm"
+  risk = "caution"
+  text = "Deletes {target} and stages the removal."
+  pending = "Deletes tracked files."
+  [[cmd.rule]]
+  sub = "clone"
+  target = "first"
+  risk = "known"
+  text = "Downloads repository {target}."
+  pending = "Downloads a repository."
+  [[cmd.rule]]
+  sub = ["status", "log", "diff", "show", "blame", "grep", "ls-files", "describe", "rev-parse", "shortlog", "reflog", "fetch", "remote", "tag", "config", "init", "worktree", "bisect", "mv", "submodule", "lfs", "sparse-checkout", "notes", "range-diff", "whatchanged", "help", "version"]
+  risk = "known"
+  text = "Runs git {sub}."
+
+[[cmd]]
+name = "gh"
+aliases = ["glab"]
+risk = "known"
+text = "Runs a GitHub CLI command."
+  [[cmd.rule]]
+  sub = ["repo delete", "release delete", "secret delete", "variable delete", "run delete", "cache delete"]
+  risk = "danger"
+  text = "Deletes it on GitHub. Cannot be undone."
+  [[cmd.rule]]
+  sub = ["repo archive", "repo edit", "repo rename"]
+  risk = "caution"
+  text = "Changes repository settings on GitHub."
+  [[cmd.rule]]
+  sub = ["pr merge"]
+  risk = "caution"
+  text = "Merges the pull request on GitHub."
+  [[cmd.rule]]
+  sub = ["pr close", "issue close", "issue delete"]
+  risk = "caution"
+  text = "Closes it on GitHub."
+  [[cmd.rule]]
+  sub = "api"
+  flags_any = ["X", "method"]
+  risk = "caution"
+  text = "Calls the GitHub API with a custom method."
+
+[[cmd]]
+name = "hg"
+aliases = ["svn", "jj", "fossil"]
+risk = "known"
+text = "Runs a version control command."
+  [[cmd.rule]]
+  sub = ["purge", "strip", "revert"]
+  risk = "danger"
+  text = "Discards work in the repository."

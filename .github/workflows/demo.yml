@@ -1,0 +1,33 @@
+name: Demo GIF
+
+# Renders docs/demo.gif from docs/demo.tape and opens a pull request with it.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Build
+        run: |
+          cargo build --release
+          cargo build --profile release-bash -p beforerunit-bash
+          echo "$PWD/target/release" >> "$GITHUB_PATH"
+      - name: Font
+        run: target/release/beforerunit fonts install maple
+      - uses: charmbracelet/vhs-action@v2
+        with:
+          path: docs/demo.tape
+      - uses: peter-evans/create-pull-request@v7
+        with:
+          commit-message: "docs: render demo GIF"
+          title: "docs: render demo GIF"
+          branch: demo-gif
+          add-paths: docs/demo.gif

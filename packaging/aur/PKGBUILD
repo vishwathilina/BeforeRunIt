@@ -1,0 +1,50 @@
+# Maintainer: BeforeRunIt contributors <beforerunit@users.noreply.github.com>
+# Builds from source. Run `updpkgsums` after bumping pkgver.
+pkgname=beforerunit
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="Live command risk line for Linux shells: a badge and a plain-English summary under your prompt"
+arch=('x86_64' 'aarch64')
+url="https://github.com/beforerunit/beforerunit"
+license=('MIT OR Apache-2.0')
+depends=('gcc-libs' 'glibc')
+optdepends=(
+  'bash: shell integration'
+  'zsh: shell integration'
+  'fish: shell integration'
+  'ttf-maple-nerd: icons (or any Nerd Font)'
+)
+makedepends=('cargo')
+options=('!lto')
+source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
+sha256sums=('SKIP')
+
+prepare() {
+  cd "$pkgname-$pkgver"
+  export RUSTUP_TOOLCHAIN=stable
+  cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
+}
+
+build() {
+  cd "$pkgname-$pkgver"
+  export RUSTUP_TOOLCHAIN=stable
+  export CARGO_TARGET_DIR=target
+  cargo build --frozen --release
+  cargo build --frozen --profile release-bash -p beforerunit-bash
+}
+
+check() {
+  cd "$pkgname-$pkgver"
+  export RUSTUP_TOOLCHAIN=stable
+  cargo test --frozen --workspace
+}
+
+package() {
+  cd "$pkgname-$pkgver"
+  install -Dm755 target/release/beforerunit "$pkgdir/usr/bin/beforerunit"
+  ln -s beforerunit "$pkgdir/usr/bin/bri"
+  install -Dm644 target/release-bash/libbeforerunit_bash.so "$pkgdir/usr/lib/beforerunit/libbeforerunit_bash.so"
+  install -Dm644 README.md "$pkgdir/usr/share/doc/$pkgname/README.md"
+  install -Dm644 LICENSE-MIT "$pkgdir/usr/share/licenses/$pkgname/LICENSE-MIT"
+  install -Dm644 LICENSE-APACHE "$pkgdir/usr/share/licenses/$pkgname/LICENSE-APACHE"
+}

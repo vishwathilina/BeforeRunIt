@@ -1,0 +1,79 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/beforerunit-core",
+    "crates/beforerunit-ai",
+    "crates/beforerunit-bash",
+    "crates/beforerunit",
+]
+# The bash builtin must be built with `--profile release-bash` (unwinding
+# panics), so it is not part of a plain `cargo build --release`.
+default-members = ["crates/beforerunit"]
+exclude = ["fuzz"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/beforerunit/beforerunit"
+homepage = "https://github.com/beforerunit/beforerunit"
+authors = ["BeforeRunIt contributors"]
+rust-version = "1.82"
+
+[workspace.dependencies]
+beforerunit-core = { path = "crates/beforerunit-core", version = "0.1.0", default-features = false }
+beforerunit-ai = { path = "crates/beforerunit-ai", version = "0.1.0" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "0.8"
+phf = "0.11"
+phf_codegen = "0.11"
+smallvec = { version = "1", features = ["union", "const_generics"] }
+rkyv = "0.8"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "io-util", "time", "sync", "signal", "fs", "process"] }
+tokio-util = "0.7"
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json", "stream", "http2"] }
+futures-util = "0.3"
+regex = "1"
+libc = "0.2"
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+panic = "abort"
+strip = true
+
+# Dependencies off the keystroke path (TUI, HTTP, keyring, zip) are optimized
+# for size; the engine, renderer and daemon stay at opt-level 3.
+[profile.release.package."*"]
+opt-level = "s"
+
+[profile.release.package.beforerunit-core]
+opt-level = 3
+
+[profile.release.package.smallvec]
+opt-level = 3
+
+[profile.release.package.phf]
+opt-level = 3
+
+[profile.release.package.phf_shared]
+opt-level = 3
+
+[profile.release.package.rkyv]
+opt-level = 3
+
+[profile.release.package.tokio]
+opt-level = 3
+
+# The bash builtin runs inside the user's shell process, so a panic must unwind
+# into `catch_unwind` instead of aborting bash. Build it with `--profile release-bash`.
+[profile.release-bash]
+inherits = "release"
+panic = "unwind"
+
+[profile.bench]
+inherits = "release"
+strip = false
+debug = true

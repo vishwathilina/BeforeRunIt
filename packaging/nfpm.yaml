@@ -1,0 +1,43 @@
+# deb and rpm packages, built by .github/workflows/release.yml:
+#   VERSION=0.1.0 ARCH=amd64 DIST=dist/beforerunit-x86_64-linux nfpm pkg -f packaging/nfpm.yaml -p deb
+name: beforerunit
+arch: ${ARCH}
+platform: linux
+version: ${VERSION}
+section: utils
+priority: optional
+maintainer: BeforeRunIt contributors <beforerunit@users.noreply.github.com>
+description: |
+  Live command risk line for Linux shells.
+  BeforeRunIt shows a risk badge (KNOWN, CAUTION, DANGER, UNKNOWN) and a short
+  plain-English summary under your prompt while you type, before you press
+  Enter. Works with bash, zsh and fish. Optional AI review over any
+  OpenAI-compatible endpoint.
+homepage: https://github.com/beforerunit/beforerunit
+license: MIT OR Apache-2.0
+recommends:
+  - fontconfig
+contents:
+  - src: ${DIST}/beforerunit
+    dst: /usr/bin/beforerunit
+    file_info:
+      mode: 0755
+  - src: beforerunit
+    dst: /usr/bin/bri
+    type: symlink
+  - src: ${DIST}/libbeforerunit_bash.so
+    dst: /usr/lib/beforerunit/libbeforerunit_bash.so
+    file_info:
+      mode: 0644
+  - src: README.md
+    dst: /usr/share/doc/beforerunit/README.md
+    file_info:
+      mode: 0644
+  - src: LICENSE-MIT
+    dst: /usr/share/licenses/beforerunit/LICENSE-MIT
+    file_info:
+      mode: 0644
+  - src: LICENSE-APACHE
+    dst: /usr/share/licenses/beforerunit/LICENSE-APACHE
+    file_info:
+      mode: 0644

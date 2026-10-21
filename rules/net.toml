@@ -1,0 +1,273 @@
+# Network commands.
+
+[[cmd]]
+name = "curl"
+takes_value = ["o", "X", "d", "H", "u", "A", "e", "F", "T", "x", "data", "header", "output", "request", "user", "form", "upload-file", "proxy", "data-raw", "data-binary", "connect-timeout", "m", "max-time", "w", "write-out", "cookie", "b", "c"]
+long = { output = "o", request = "X", data = "d", header = "H", "remote-name" = "O", "upload-file" = "T", form = "F", insecure = "k" }
+target = "first"
+risk = "known"
+text = "Downloads {target} and prints it."
+pending = "Downloads from a URL."
+  [[cmd.rule]]
+  flags_any = ["T"]
+  risk = "caution"
+  text = "Uploads a local file to {target}."
+  pending = "Uploads a local file to a server."
+  [[cmd.rule]]
+  args_any = ["DELETE"]
+  risk = "caution"
+  text = "Sends a DELETE request to {target}."
+  pending = "Sends a DELETE request."
+  [[cmd.rule]]
+  flags_any = ["d", "F", "data-raw", "data-binary", "json"]
+  risk = "caution"
+  text = "Sends data to {target}."
+  pending = "Sends data to a server."
+  [[cmd.rule]]
+  flags_any = ["k"]
+  risk = "caution"
+  text = "Downloads {target} without checking security certificates."
+  pending = "Downloads without checking security certificates."
+  [[cmd.rule]]
+  flags_any = ["o", "O"]
+  risk = "known"
+  text = "Downloads {target} to a file."
+  pending = "Downloads a file."
+
+[[cmd]]
+name = "wget"
+aliases = ["aria2c", "fetch"]
+takes_value = ["O", "o", "P", "U", "output-document", "directory-prefix", "user-agent"]
+target = "first"
+risk = "known"
+text = "Downloads {target} to a file."
+pending = "Downloads a file from a URL."
+  [[cmd.rule]]
+  flags_any = ["r", "recursive", "m", "mirror"]
+  risk = "caution"
+  text = "Downloads a whole website from {target}."
+  pending = "Downloads a whole website."
+  [[cmd.rule]]
+  flags_any = ["no-check-certificate"]
+  risk = "caution"
+  text = "Downloads {target} without checking certificates."
+  pending = "Downloads without checking certificates."
+
+[[cmd]]
+name = "http"
+aliases = ["https", "xh", "httpie"]
+target = "first"
+risk = "known"
+text = "Sends an HTTP request to {target}."
+pending = "Sends an HTTP request."
+  [[cmd.rule]]
+  args_any = ["DELETE", "PUT", "PATCH", "POST"]
+  target = "after:1"
+  risk = "caution"
+  text = "Sends a changing request to {target}."
+  pending = "Sends a request that changes data."
+
+[[cmd]]
+name = "ssh"
+aliases = ["mosh", "autossh"]
+takes_value = ["i", "p", "l", "o", "F", "J", "L", "R", "D", "b", "c", "E", "m", "O", "Q", "S", "W", "w"]
+target = "first"
+category = "read"
+risk = "known"
+text = "Logs into {target} remotely."
+pending = "Opens a remote shell."
+  [[cmd.rule]]
+  args_any = ["StrictHostKeyChecking=no", "UserKnownHostsFile=/dev/null"]
+  risk = "caution"
+  text = "Connects to {target} without verifying its identity."
+  pending = "Connects without verifying the server."
+
+[[cmd]]
+name = "scp"
+aliases = ["sftp"]
+takes_value = ["i", "P", "o", "F", "l", "c", "J"]
+risk = "caution"
+text = "Copies {target} over the network. May overwrite."
+pending = "Copies files to or from another machine."
+
+[[cmd]]
+name = "ssh-keygen"
+takes_value = ["t", "b", "f", "C", "N", "R", "F"]
+risk = "known"
+text = "Creates or manages SSH keys."
+  [[cmd.rule]]
+  flags_any = ["R"]
+  risk = "caution"
+  text = "Removes a host from your known hosts."
+  [[cmd.rule]]
+  flags_any = ["p"]
+  risk = "caution"
+  text = "Changes the passphrase of a key."
+
+[[cmd]]
+name = "ssh-copy-id"
+risk = "caution"
+text = "Lets your key log into {target}."
+pending = "Installs your SSH key on a server."
+
+[[cmd]]
+name = "ping"
+aliases = ["ping6", "traceroute", "tracepath", "mtr"]
+takes_value = ["c", "i", "W", "s", "I"]
+category = "read"
+risk = "known"
+text = "Checks if {target} is reachable."
+pending = "Checks if a host is reachable."
+
+[[cmd]]
+name = "dig"
+aliases = ["nslookup", "host", "whois", "drill", "resolvectl"]
+category = "read"
+risk = "known"
+text = "Looks up DNS info for {target}."
+pending = "Looks up DNS records."
+
+[[cmd]]
+name = "nc"
+aliases = ["ncat", "netcat", "socat", "telnet"]
+category = "read"
+risk = "caution"
+text = "Opens a raw network connection to {target}."
+pending = "Opens a raw network connection."
+  [[cmd.rule]]
+  flags_any = ["e", "c"]
+  risk = "danger"
+  text = "Gives remote access to a shell. Backdoor risk."
+  [[cmd.rule]]
+  flags_any = ["l"]
+  risk = "caution"
+  text = "Listens for incoming network connections."
+
+[[cmd]]
+name = "nmap"
+aliases = ["masscan", "zmap"]
+risk = "caution"
+text = "Scans {target} for open ports."
+pending = "Scans machines for open ports."
+
+[[cmd]]
+name = "ip"
+takes_value = ["n", "netns"]
+category = "read"
+risk = "known"
+text = "Shows network settings."
+  [[cmd.rule]]
+  args_any = ["del", "delete", "flush", "down"]
+  risk = "danger"
+  text = "Removes network settings. May cut your connection."
+  [[cmd.rule]]
+  args_any = ["add", "set", "change", "replace", "up"]
+  risk = "caution"
+  text = "Changes network settings."
+
+[[cmd]]
+name = "ifconfig"
+aliases = ["iwconfig", "ifup", "ifdown"]
+category = "read"
+risk = "known"
+text = "Shows or changes network interfaces."
+  [[cmd.rule]]
+  args_any = ["down"]
+  risk = "danger"
+  text = "Turns a network interface off. May cut access."
+
+[[cmd]]
+name = "nmcli"
+category = "read"
+risk = "known"
+text = "Shows or manages network connections."
+  [[cmd.rule]]
+  args_any = ["delete", "down", "off", "disconnect"]
+  risk = "caution"
+  text = "Disconnects or removes a network connection."
+
+[[cmd]]
+name = "iptables"
+aliases = ["ip6tables", "nft", "iptables-restore"]
+risk = "caution"
+text = "Changes firewall rules."
+  [[cmd.rule]]
+  flags_any = ["F", "flush", "X", "delete-chain"]
+  risk = "danger"
+  text = "Wipes all firewall rules. Machine becomes exposed."
+  [[cmd.rule]]
+  args_any = ["flush"]
+  risk = "danger"
+  text = "Wipes all firewall rules. Machine becomes exposed."
+  [[cmd.rule]]
+  flags_any = ["L", "list", "S"]
+  risk = "known"
+  text = "Lists firewall rules."
+
+[[cmd]]
+name = "ufw"
+aliases = ["firewall-cmd"]
+risk = "caution"
+text = "Changes firewall settings."
+  [[cmd.rule]]
+  args_any = ["disable", "reset", "--panic-off"]
+  risk = "danger"
+  text = "Turns the firewall off or resets it."
+  [[cmd.rule]]
+  args_any = ["status", "--state", "--list-all", "app"]
+  risk = "known"
+  text = "Shows firewall status."
+
+[[cmd]]
+name = "ss"
+aliases = ["netstat", "lsof", "iftop", "nethogs", "bmon", "nload"]
+category = "read"
+risk = "known"
+text = "Shows network connections and open files."
+
+[[cmd]]
+name = "tcpdump"
+aliases = ["tshark", "wireshark", "ngrep"]
+takes_value = ["i", "w", "r", "c", "s"]
+risk = "caution"
+text = "Captures network traffic, including private data."
+
+[[cmd]]
+name = "openssl"
+category = "read"
+risk = "known"
+text = "Runs a crypto or certificate tool."
+  [[cmd.rule]]
+  sub = ["req", "genrsa", "genpkey", "x509"]
+  flags_any = ["out"]
+  risk = "known"
+  text = "Creates keys or certificates."
+
+[[cmd]]
+name = "serve"
+aliases = ["http-server", "live-server"]
+risk = "caution"
+text = "Shares this folder over the network."
+
+[[cmd]]
+name = "ngrok"
+aliases = ["cloudflared", "localtunnel", "lt", "bore"]
+risk = "caution"
+text = "Exposes a local service to the internet."
+
+[[cmd]]
+name = "ftp"
+aliases = ["lftp", "tftp"]
+risk = "caution"
+text = "Connects to {target} without encryption."
+pending = "Transfers files without encryption."
+
+[[cmd]]
+name = "wg"
+aliases = ["wg-quick", "openvpn", "tailscale", "zerotier-cli"]
+risk = "caution"
+text = "Changes VPN connections."
+  [[cmd.rule]]
+  args_any = ["show", "status", "ip", "ping", "netcheck"]
+  risk = "known"
+  text = "Shows VPN status."

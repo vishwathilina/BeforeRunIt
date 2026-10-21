@@ -1,0 +1,20 @@
+---
+source: crates/beforerunit-core/tests/progression.rs
+expression: "progression(\"git push --force origin main\")"
+---
+g                                        | IDLE     Typing command...
+git                                      | KNOWN    Runs a git command.
+git push                                 | CAUTION  Uploads your commits to the remote.
+git push --f                             | DANGER   Overwrites remote history. Others can lose work.
+git push --fo                            | CAUTION  Uploads your commits to the remote.
+git push --force                         | DANGER   Overwrites remote history. Others can lose work.
+git push --force o                       | DANGER   Overwrites remote history of "o". Others lose work.
+git push --force or                      | DANGER   Overwrites remote history of "or". Others lose work.
+git push --force ori                     | DANGER   Overwrites remote history of "ori". Others lose work.
+git push --force orig                    | DANGER   Overwrites remote history of "orig". Others lose work.
+git push --force origi                   | DANGER   Overwrites remote history of "origi". Others lose work.
+git push --force origin                  | DANGER   Overwrites remote history of "origin". Others lose work.
+git push --force origin m                | DANGER   Overwrites remote history of "m". Others lose work.
+git push --force origin ma               | DANGER   Overwrites remote history of "ma". Others lose work.
+git push --force origin mai              | DANGER   Overwrites remote history of "mai". Others lose work.
+git push --force origin main             | DANGER   Overwrites remote history of "main". Others lose work.

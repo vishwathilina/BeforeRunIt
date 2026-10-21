@@ -1,0 +1,19 @@
+---
+source: crates/beforerunit-core/tests/progression.rs
+expression: "progression(\"sudo dd if=ubuntu.iso of=/dev/sda bs=4M\")"
+---
+s                                        | IDLE     Typing command...
+su                                       | CAUTION  Switches user. Default is a root shell.
+sud                                      | IDLE     Typing command...
+sudo                                     | CAUTION  Runs the next command as administrator.
+sudo d                                   | IDLE     Typing command...
+sudo dd                                  | CAUTION  Copies raw data. Waiting for output target...
+sudo dd if=ubuntu.iso of=                | CAUTION  Writes raw data to "".
+sudo dd if=ubuntu.iso of=/               | DANGER   Changes your entire system. Can break booting.
+sudo dd if=ubuntu.iso of=/d              | CAUTION  Writes raw data to "/d".
+sudo dd if=ubuntu.iso of=/de             | CAUTION  Writes raw data to "/de".
+sudo dd if=ubuntu.iso of=/dev            | DANGER   Changes system folder "/dev". Can break the OS.
+sudo dd if=ubuntu.iso of=/dev/           | DANGER   Changes system folder "/dev/". Can break the OS.
+sudo dd if=ubuntu.iso of=/dev/s          | CAUTION  Writes raw data to "/dev/s".
+sudo dd if=ubuntu.iso of=/dev/sd         | DANGER   Overwrites disk "/dev/sd". All data lost.
+sudo dd if=ubuntu.iso of=/dev/sda        | DANGER   Overwrites disk "/dev/sda". All data lost.

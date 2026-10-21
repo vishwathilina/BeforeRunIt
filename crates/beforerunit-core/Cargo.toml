@@ -1,0 +1,41 @@
+[package]
+name = "beforerunit-core"
+description = "Shell lexer, rule engine, risk scoring and ghost-line rendering for BeforeRunIt"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+build = "build.rs"
+
+[features]
+default = ["io"]
+# Paths and the memory-mapped compiled config cache.
+io = ["dep:memmap2", "dep:libc"]
+# TOML parsing of user config and rules.d. Kept out of the keystroke hot path.
+compile = ["io", "dep:toml"]
+
+[dependencies]
+serde = { workspace = true }
+phf = { workspace = true }
+smallvec = { workspace = true }
+rkyv = { workspace = true }
+toml = { workspace = true, optional = true }
+memmap2 = { version = "0.9", optional = true }
+libc = { workspace = true, optional = true }
+
+[build-dependencies]
+serde = { workspace = true }
+rkyv = { workspace = true }
+toml = { workspace = true }
+phf_codegen = { workspace = true }
+
+[dev-dependencies]
+insta = "1"
+criterion = { version = "0.5", default-features = false, features = ["cargo_bench_support"] }
+toml = { workspace = true }
+
+[[bench]]
+name = "engine"
+harness = false

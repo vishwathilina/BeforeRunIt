@@ -1,0 +1,33 @@
+---
+source: crates/beforerunit-core/tests/progression.rs
+expression: "progression(\"curl -fsSL https://get.example.sh | sudo bash\")"
+---
+c                                        | IDLE     Typing command...
+curl                                     | KNOWN    Downloads from a URL.
+curl -fsSL h                             | KNOWN    Downloads "h" and prints it.
+curl -fsSL ht                            | KNOWN    Downloads "ht" and prints it.
+curl -fsSL htt                           | KNOWN    Downloads "htt" and prints it.
+curl -fsSL http                          | KNOWN    Downloads "http" and prints it.
+curl -fsSL https                         | KNOWN    Downloads "https" and prints it.
+curl -fsSL https:                        | KNOWN    Downloads "https:" and prints it.
+curl -fsSL https:/                       | KNOWN    Downloads "https:/" and prints it.
+curl -fsSL https://                      | KNOWN    Downloads "https://" and prints it.
+curl -fsSL https://g                     | KNOWN    Downloads "https://g" and prints it.
+curl -fsSL https://ge                    | KNOWN    Downloads "https://ge" and prints it.
+curl -fsSL https://get                   | KNOWN    Downloads "https://get" and prints it.
+curl -fsSL https://get.                  | KNOWN    Downloads "https://get." and prints it.
+curl -fsSL https://get.e                 | KNOWN    Downloads "https://get.e" and prints it.
+curl -fsSL https://get.ex                | KNOWN    Downloads "https://get.ex" and prints it.
+curl -fsSL https://get.exa               | KNOWN    Downloads "https://get.exa" and prints it.
+curl -fsSL https://get.exam              | KNOWN    Downloads "https://get.exam" and prints it.
+curl -fsSL https://get.examp             | KNOWN    Downloads "https://get.examp" and prints it.
+curl -fsSL https://get.exampl            | KNOWN    Downloads "https://get.exampl" and prints it.
+curl -fsSL https://get.example           | KNOWN    Downloads "https://get.example" and prints it.
+curl -fsSL https://get.example.          | KNOWN    Downloads "https://get.example." and prints it.
+curl -fsSL https://get.example.s         | KNOWN    Downloads "https://get.example.s" and prints it.
+curl -fsSL https://get.example.sh        | KNOWN    Downloads "https://get.example.sh" and prints it.
+curl -fsSL https://get.example.sh | su   | CAUTION  Switches user. Default is a root shell.
+curl -fsSL https://get.example.sh | sud  | KNOWN    Downloads "https://get.example.sh" and prints it.
+curl -fsSL https://get.example.sh | sudo | CAUTION  Runs the next command as administrator.
+curl -fsSL https://get.example.sh | sudo b | KNOWN    Downloads "https://get.example.sh" and prints it.
+curl -fsSL https://get.example.sh | sudo bash | DANGER   Runs an internet script without checking it.
