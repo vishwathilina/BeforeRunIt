@@ -66,6 +66,17 @@ SRC=""
 HERE=$(CDPATH= cd -- "$(dirname -- "$0")" 2>/dev/null && pwd || true)
 if [ -n "$HERE" ] && [ -x "$HERE/beforerunit" ] && [ -f "$HERE/libbeforerunit_bash.so" ]; then
   SRC=$HERE
+elif [ -n "$HERE" ] && [ -f "$HERE/Cargo.toml" ] && [ -d "$HERE/crates/beforerunit" ]; then
+  # Source checkout: install what cargo built, building it first if needed.
+  if [ ! -x "$HERE/target/release/beforerunit" ] || [ ! -f "$HERE/target/release-bash/libbeforerunit_bash.so" ]; then
+    command -v cargo >/dev/null 2>&1 || err "this is a source checkout and cargo is not installed. Install Rust from https://rustup.rs, or use a release: curl -fsSL https://github.com/$REPO/releases/latest/download/install.sh | sh"
+    say "Building from source (a few minutes the first time)"
+    (cd "$HERE" && cargo build --release && cargo build --profile release-bash -p beforerunit-bash) || err "build failed"
+  fi
+  STAGE=$(mktemp -d)
+  trap 'rm -rf "$STAGE"' EXIT INT TERM
+  cp "$HERE/target/release/beforerunit" "$HERE/target/release-bash/libbeforerunit_bash.so" "$STAGE/"
+  SRC=$STAGE
 else
   TMP=$(mktemp -d)
   trap 'rm -rf "$TMP"' EXIT INT TERM
@@ -76,7 +87,8 @@ else
     BASE="https://github.com/$REPO/releases/download/$VERSION"
   fi
   say "Downloading $NAME ($VERSION)"
-  fetch "$BASE/$NAME.tar.gz" "$TMP/$NAME.tar.gz"
+  fetch "$BASE/$NAME.tar.gz" "$TMP/$NAME.tar.gz" ||
+    err "could not download $BASE/$NAME.tar.gz (is there a published release yet?). To build from source instead: git clone https://github.com/$REPO && cd beforerunit && ./install.sh"
   if command -v sha256sum >/dev/null 2>&1 && fetch "$BASE/SHA256SUMS" "$TMP/SHA256SUMS" 2>/dev/null; then
     (cd "$TMP" && grep " $NAME.tar.gz\$" SHA256SUMS | sha256sum -c --quiet -) || err "checksum mismatch, download is corrupt"
   fi
