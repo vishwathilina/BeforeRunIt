@@ -79,6 +79,9 @@ impl AiError {
             AiError::Http(code, body) => format!("Server error {code}: {}", body.chars().take(120).collect::<String>()),
             AiError::Timeout => "No answer before the timeout. Try a smaller or local model.".into(),
             AiError::Connect(e) => format!("Cannot reach the server. Is it running? ({e})"),
+            AiError::BadResponse(e) if e.is_empty() => {
+                "The model sent an empty answer. Reasoning models often do this; pick a non-reasoning model (a small instruct model works best).".into()
+            }
             AiError::BadResponse(e) => format!("The model did not reply with valid JSON: {e}"),
         }
     }
@@ -199,7 +202,10 @@ fn clean_reason(s: &str) -> String {
 
 /// Validates the model's JSON reply into a verdict.
 pub fn parse_verdict(raw: &str) -> Result<AiVerdict, AiError> {
-    let j = extract_json(raw).ok_or_else(|| AiError::BadResponse(raw.chars().take(80).collect()))?;
+    if raw.trim().is_empty() {
+        return Err(AiError::BadResponse(String::new()));
+    }
+    let j = extract_json(raw).ok_or_else(|| AiError::BadResponse(raw.split_whitespace().collect::<Vec<_>>().join(" ").chars().take(80).collect()))?;
     let v: Value = serde_json::from_str(j).map_err(|e| AiError::BadResponse(e.to_string()))?;
     let risk = v.get("risk").or_else(|| v.get("level")).and_then(Value::as_str).unwrap_or("");
     let level = match Level::parse(risk) {
@@ -227,6 +233,23 @@ pub struct TestReport {
     pub latency_ms: u128,
     pub raw: String,
     pub verdict: Result<AiVerdict, AiError>,
+}
+
+/// Uses the answer text, or the thinking text when only that holds the JSON.
+fn finish(content: String, thinking: String) -> String {
+    if extract_json(&content).is_none() && extract_json(&thinking).is_some() {
+        thinking
+    } else {
+        content
+    }
+}
+
+/// Servers can answer 200 and still report an error in the body.
+fn api_error(v: &Value) -> Option<AiError> {
+    let e = v.get("error")?;
+    let code = e.get("code").and_then(Value::as_u64).unwrap_or(500) as u16;
+    let msg = e.get("message").and_then(Value::as_str).unwrap_or("unknown error");
+    Some(AiError::Http(if (400..600).contains(&code) { code } else { 500 }, msg.to_string()))
 }
 
 fn map_err(e: reqwest::Error) -> AiError {
@@ -295,16 +318,24 @@ impl Client {
     }
 
     fn body(&self, user: &str, stream: bool) -> Value {
-        json!({
+        // Only a ceiling: plain models stop after ~40 tokens, and streaming
+        // returns as soon as the JSON closes. Reasoning models need the room.
+        let mut b = json!({
             "model": self.ep.model,
             "temperature": 0,
-            "max_tokens": 80,
+            "max_tokens": 1024,
             "stream": stream,
             "messages": [
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": user},
             ],
-        })
+        });
+        // OpenRouter lets us skip the thinking phase; other servers may reject
+        // unknown fields, so it is sent only there.
+        if self.ep.base_url.contains("openrouter.ai") {
+            b["reasoning"] = json!({"enabled": false});
+        }
+        b
     }
 
     /// Streams the completion and returns as soon as the JSON object closes.
@@ -323,9 +354,23 @@ impl Client {
                 .is_some_and(|v| v.contains("event-stream"));
             if !is_sse {
                 let v: Value = resp.json().await.map_err(map_err)?;
-                return Ok(v["choices"][0]["message"]["content"].as_str().unwrap_or_default().to_string());
+                if let Some(e) = api_error(&v) {
+                    return Err(e);
+                }
+                let m = &v["choices"][0]["message"];
+                let content = m["content"].as_str().unwrap_or_default();
+                if extract_json(content).is_none() {
+                    // Some reasoning models put the answer in the thinking field.
+                    for k in ["reasoning", "reasoning_content"] {
+                        if let Some(r) = m[k].as_str().filter(|r| extract_json(r).is_some()) {
+                            return Ok(r.to_string());
+                        }
+                    }
+                }
+                return Ok(content.to_string());
             }
             let mut content = String::new();
+            let mut thinking = String::new();
             let mut buf = String::new();
             let mut stream = resp.bytes_stream();
             while let Some(chunk) = stream.next().await {
@@ -337,19 +382,28 @@ impl Client {
                     let Some(data) = line.strip_prefix("data:") else { continue };
                     let data = data.trim();
                     if data == "[DONE]" {
-                        return Ok(content);
+                        return Ok(finish(content, thinking));
                     }
                     if let Ok(v) = serde_json::from_str::<Value>(data) {
-                        if let Some(d) = v["choices"][0]["delta"]["content"].as_str() {
+                        if let Some(e) = api_error(&v) {
+                            return Err(e);
+                        }
+                        let delta = &v["choices"][0]["delta"];
+                        if let Some(d) = delta["content"].as_str() {
                             content.push_str(d);
                             if extract_json(&content).is_some() {
                                 return Ok(content);
                             }
                         }
+                        for k in ["reasoning", "reasoning_content"] {
+                            if let Some(d) = delta[k].as_str() {
+                                thinking.push_str(d);
+                            }
+                        }
                     }
                 }
             }
-            Ok(content)
+            Ok(finish(content, thinking))
         };
         match tokio::time::timeout(self.ep.timeout, fut).await {
             Ok(r) => r,
@@ -382,6 +436,20 @@ impl Client {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn reasoning_models() {
+        // Answer only in the thinking text.
+        let t = r#"Let me think. {"risk":"danger","confidence":0.9,"reason":"Deletes build"}"#;
+        assert_eq!(finish(String::new(), t.into()), t);
+        assert_eq!(finish("{\"risk\":\"safe\"}".into(), t.into()), "{\"risk\":\"safe\"}");
+        // Empty answer gets its own explanation, not a blank one.
+        let e = parse_verdict("  ").unwrap_err();
+        assert!(e.explain().contains("empty answer"), "{}", e.explain());
+        // Errors inside a 200 body surface as HTTP errors.
+        let v: Value = serde_json::from_str(r#"{"error":{"code":429,"message":"slow down"}}"#).unwrap();
+        assert_eq!(api_error(&v), Some(AiError::Http(429, "slow down".into())));
+    }
 
     #[test]
     fn parses_plain_and_wrapped_json() {
