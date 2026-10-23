@@ -15,8 +15,8 @@ exclude = ["fuzz"]
 version = "0.1.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/beforerunit/beforerunit"
-homepage = "https://github.com/beforerunit/beforerunit"
+repository = "https://github.com/vishwathilina/BeforeRunIt"
+homepage = "https://github.com/vishwathilina/BeforeRunIt"
 authors = ["BeforeRunIt contributors"]
 rust-version = "1.82"
 

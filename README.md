@@ -1,178 +1,272 @@
-# BeforeRunIt
+<p align="center">
+  <img src="docs/logo.png" alt="BeforeRunIt" width="520">
+</p>
 
-**Know what a command does before you press Enter.**
+<p align="center">
+  <b>Your finger is on Enter. Read the line under it first.</b>
+</p>
 
-BeforeRunIt draws a live line under your shell prompt while you type. It shows
-a risk badge and a plain-English summary of at most ten words, and it updates
-on every keystroke and paste.
+<p align="center">
+  BeforeRunIt watches the command you are typing and says, in plain English,<br>
+  what it will actually do. One line. About ten words. On every keystroke.<br>
+  bash, zsh and fish. On your machine. No account, no cloud.
+</p>
+
+## The half-second that matters
+
+The dangerous command and the safe one are often the same letters.
 
 ```text
-$ rm -rf build
-╰─  DANGER  Deletes "build" forever. Skips Trash.
+$ rm -rf build/
+╰─  DANGER  Deletes "build/" forever. Skips Trash.
 
-$ git push --force-with-lease origin main
-╰─  CAUTION  Force-pushes "main", only if nobody else pushed.
+$ rm -rf build /
+╰─  DANGER  Deletes your entire system. Unrecoverable.
+```
 
-$ tar tzf release.tar.gz
-╰─  KNOWN  Lists what is inside "release.tar.gz".
+One space. That is the difference between a folder and your whole machine. The man page explains it too, but not in the moment your finger is already moving. BeforeRunIt does.
 
-$ frobnicate --all
+Same idea, other shapes:
+
+```text
+$ curl https://example.com/install.sh | sh
+╰─  DANGER  Runs an internet script without checking it.
+
+$ git push --force origin main
+╰─  DANGER  Overwrites remote history of "main". Others lose work.
+
+$ git status
+╰─  KNOWN  Runs git status.
+
+$ ncdu
 ╰─  UNKNOWN  Not in the rule book. Check before running.
 ```
 
-| Badge | Meaning |
-|---|---|
-| KNOWN | In the rule book and safe in this form |
-| CAUTION | Changes things, but can usually be undone |
-| DANGER | Destroys data, rewrites history, or opens up permissions |
-| UNKNOWN | Not in the rule book; the optional AI review can explain it |
+`git status` only looks. `ncdu` is a real, useful program that the rule book has simply not met yet, so the line says so instead of pretending.
 
-Works with **bash, zsh and fish** on any Linux distro. Written in Rust.
-Licensed under MIT or Apache-2.0.
+## The four words
+
+Every command gets one of these. That is the whole idea.
+
+<table>
+<tr>
+<td align="center" width="25%">
+<img src="docs/bear-known.png" alt="A happy bear giving a thumbs up" width="150"><br>
+<b>KNOWN</b><br>
+Safe. This one only looks, or it is harmless.
+</td>
+<td align="center" width="25%">
+<img src="docs/bear-caution.png" alt="A bear thinking, with a light bulb" width="150"><br>
+<b>CAUTION</b><br>
+Slow down. This changes something, but you can usually undo it.
+</td>
+<td align="center" width="25%">
+<img src="docs/bear-danger.png" alt="A worried bear covering its eyes" width="150"><br>
+<b>DANGER</b><br>
+Stop. This can delete files, break a system, or throw work away.
+</td>
+<td align="center" width="25%">
+<img src="docs/bear-unknown.png" alt="A confused bear with question marks" width="150"><br>
+<b>UNKNOWN</b><br>
+Not in the rule book yet. Read it yourself before you run it.
+</td>
+</tr>
+</table>
+
+## What that looks like
+
+<table>
+<tr>
+<td align="center" width="50%">
+<img src="docs/scene-danger.jpg" alt="The bear panics as the terminal shows a DANGER badge on rm -rf build"><br>
+<b>DANGER.</b> The line spoke before Enter did.
+</td>
+<td align="center" width="50%">
+<img src="docs/scene-known.jpg" alt="The bear gives a thumbs up as the terminal shows a KNOWN badge"><br>
+<b>KNOWN.</b> All good. Carry on.
+</td>
+</tr>
+<tr>
+<td align="center">
+<img src="docs/scene-unknown.jpg" alt="The bear is confused by an UNKNOWN badge"><br>
+<b>UNKNOWN.</b> Never seen this command. Check it first.
+</td>
+<td align="center">
+<img src="docs/scene-setup.jpg" alt="The bear has an idea while running beforerunit setup"><br>
+<b>Want a second opinion?</b> That is what setup is for.
+</td>
+</tr>
+</table>
+
+The pictures are the mascot. The lines above are exactly what your terminal prints, and they update on every key.
 
 ## Install
 
+One command. It works for a normal user, with no root password:
+
 ```sh
-curl -fsSL https://github.com/beforerunit/beforerunit/releases/latest/download/install.sh | sh
+curl -fsSL https://github.com/vishwathilina/BeforeRunIt/releases/latest/download/install.sh | sh
 ```
 
-The installer puts `beforerunit` (and the short alias `bri`) in `~/.local/bin`,
-or `/usr/local/bin` when run as root. It installs the bash fast path in
-`lib/beforerunit/` next to it and adds one line to the startup file of your
-login shell. Run `sh install.sh --help` for options such as `--prefix`,
-`--shell` and `--no-modify-rc`.
+Then open a **new** terminal and type `ls`. The line should show up underneath.
 
-Other ways to install:
+Already cloned this repository? Run `./install.sh` from the project folder.
+It installs the copy you built (and builds it first, if you have not).
 
-- **Debian, Ubuntu:** download the `.deb` from the
-  [releases](https://github.com/beforerunit/beforerunit/releases), then
-  `sudo apt install ./beforerunit_*.deb`.
-- **Fedora, openSUSE:** download the `.rpm`, then `sudo dnf install ./beforerunit-*.rpm`.
-- **Arch:** build with [`packaging/aur/PKGBUILD`](packaging/aur/PKGBUILD).
-- **Nix:** `nix profile install github:beforerunit/beforerunit`
-- **From source:**
-  ```sh
-  cargo build --release
-  cargo build --profile release-bash -p beforerunit-bash   # bash fast path
-  ```
+The installer puts three things in place:
 
-### Hook up your shell
+- `beforerunit`, the program, in `~/.local/bin` (or `/usr/local/bin` if you are root)
+- `bri`, a shorter name for the same program
+- one line in the startup file of your login shell, so it loads every time
 
-The installer does this for you. To do it by hand, add one line:
+If `~/.local/bin` is not on your `PATH`, the installer says so. The line under
+your prompt still works. Add that folder to your `PATH` when you want to type
+`beforerunit` yourself.
 
-| Shell | File | Line |
+### Add the line yourself
+
+Only needed when you installed with `--no-modify-rc`, or the installer could
+not see your shell.
+
+| Shell | Add this line to | |
 |---|---|---|
 | bash | `~/.bashrc` | `eval "$(beforerunit init bash)"` |
 | zsh | `~/.zshrc` | `eval "$(beforerunit init zsh)"` |
 | fish | `~/.config/fish/config.fish` | `beforerunit init fish \| source` |
 
-With [ble.sh](https://github.com/akinomyoga/ble.sh), place the bash line
-before `ble-attach`; BeforeRunIt then draws through ble.sh's own info area.
+Using [ble.sh](https://github.com/akinomyoga/ble.sh)? Put the bash line
+**before** `ble-attach`.
 
-Then open a new terminal and run `beforerunit doctor` to check everything.
+Other installs: `.deb` and `.rpm` from the
+[releases](https://github.com/vishwathilina/BeforeRunIt/releases),
+[`packaging/aur/PKGBUILD`](packaging/aur/PKGBUILD) for Arch, or
+`nix profile install github:vishwathilina/BeforeRunIt`.
 
-### Fonts
-
-The badges use [Nerd Font](https://www.nerdfonts.com) icons. If your terminal
-shows boxes instead of icons, install a font:
+### Check that it worked
 
 ```sh
-beforerunit fonts install            # Maple Mono NF (default)
-beforerunit fonts install jetbrains  # JetBrainsMono Nerd Font
+beforerunit doctor
 ```
 
-Fonts go into `~/.local/share/fonts/beforerunit/`. Then select the font in
-your terminal settings; `beforerunit fonts status` tells you where that
-setting lives for common terminals. If you would rather not change fonts,
-pick `icons = "unicode"` or `"ascii"` in `beforerunit setup`.
+Green marks are fine. A yellow mark comes with the exact command to fix it.
 
-## Usage
+### The icons look like empty boxes
 
-Just type. The line follows along, and Enter clears it before the command runs.
+The badges use a [Nerd Font](https://www.nerdfonts.com). If you see boxes
+instead of small icons:
+
+```sh
+beforerunit fonts install
+```
+
+That downloads Maple Mono and tells you where to select it in your terminal.
+You can also skip the icons: in `beforerunit setup`, set icons to `unicode`
+or `ascii` and the badges become plain text.
+
+## Day to day
+
+Just type. The line follows along. Pressing Enter clears it, then your
+command runs as usual.
+
+- **Alt-B** hides the line. Press it again to bring it back.
+- `beforerunit explain rm -rf build` prints the full reason, not just the ten words.
+- `beforerunit setup` opens the settings screen: colors, when to show the line, and the AI.
+- In that screen, **Ctrl-S saves**. Closing it with `q` throws the changes away.
 
 | Command | What it does |
 |---|---|
-| `beforerunit setup` | Settings app: AI provider, theme, display, rule browser |
-| `beforerunit explain CMD...` | Full breakdown of one command (exit code 0 known, 1 unknown, 2 caution, 3 danger) |
-| `beforerunit doctor` | Checks shells, terminal, fonts, config and AI |
-| `beforerunit test-ai` | Sends a sample command to your AI endpoint |
-| `beforerunit fonts install` | Installs a Nerd Font |
-| `beforerunit bench` | Measures speed against the budgets below |
-| `beforerunit uninstall` | Removes hooks, cache, settings and fonts |
+| `beforerunit setup` | Settings: colors, the AI, and the rule book |
+| `beforerunit explain CMD` | The full reason for one command |
+| `beforerunit doctor` | Checks that the shell, the font and the AI are set up |
+| `beforerunit test-ai` | Sends one sample command to your AI, to prove the key works |
+| `beforerunit fonts install` | Downloads a font that can draw the icons |
+| `beforerunit uninstall` | Removes the shell line, the settings and the font |
 
-**Alt-B** turns the line off and on for the current shell (change it with
-`toggle_key`).
+`explain` uses its exit code so scripts can read it: 0 known, 1 unknown,
+2 caution, 3 danger.
 
-## AI review (optional)
+## A second opinion, from an AI you choose
 
-The rule book covers about 160 common commands and needs no network. For
-everything else, and as a second opinion on risky commands, BeforeRunIt can
-ask any **OpenAI-compatible** endpoint: Ollama, LM Studio, Groq, OpenRouter,
-OpenAI, or your own server.
+You do not need this. The rule book covers about 160 common commands and it
+never touches the network.
+
+For commands it does not know, you can point BeforeRunIt at any server that
+speaks the OpenAI API: Ollama or LM Studio on your own machine (free), or
+Groq, OpenRouter or OpenAI.
 
 ```sh
-beforerunit setup     # pick a provider, paste a key, fetch models, test
-beforerunit test-ai   # or test from the command line
+beforerunit setup
 ```
 
-How it works:
+Pick a provider, paste your key, press `f` to fetch the model list, press `t`
+to test, then **Ctrl-S** to save. Open a new terminal afterwards.
 
-- Tier 1, the local rule engine, answers in microseconds on every keystroke.
-- Tier 2, the AI, runs in a background daemon 300 ms after you stop typing.
-  The answer appears in place with an AI tag, and results are cached for 7 days.
-- `ai.mode`:
-  - `unknown-only` asks only about commands the rule book does not know;
-  - `review-all` also reviews known commands;
-  - `off` disables the AI.
-- The AI may **raise** a risk at any time. It may **lower** one by a single
-  level only when its confidence is at least 0.8, and never below a hard rule.
-  For example, `rm -rf /` is always DANGER.
+A small instruct model is the right tool here. Reasoning models spend the
+whole reply "thinking" and often send back nothing useful.
 
-**Privacy.** The AI sees only:
-- the command line, with secrets such as tokens, passwords and keys masked;
-- the current folder's name;
-- the git state (branch, dirty or clean);
-- whether you are root;
-- whether the files the command targets exist.
+What the AI is allowed to do:
 
-It never sees file contents, your environment or your history.
+- It can raise the warning whenever it disagrees.
+- It can lower the warning by one step, and only when it is very sure.
+- It can never lower a hard rule. `rm -rf /` stays DANGER no matter what it says.
 
-**API keys** are stored in the system keyring (Secret Service). Without a
-keyring, they go in a file readable only by you (mode 0600). The
-`BEFORERUNIT_API_KEY` environment variable overrides both.
+What the AI is allowed to see: the command, with passwords and keys blanked
+out, the folder name, whether it is a git repo, whether you are root, and
+whether the files you named exist. Never your file contents, your environment,
+or your history.
 
-## Configuration
+Your key is stored in the system keyring. With no keyring, it goes in a file
+only your user can read. `BEFORERUNIT_API_KEY` overrides both.
 
-`~/.config/beforerunit/config.toml`. The setup app writes it for you; these
-are the defaults:
+## Support this project
+
+BeforeRunIt is free, open source, and built in spare time. If it has ever
+stopped you pressing Enter on the wrong command, you can help keep it going.
+
+<table>
+<tr>
+<td width="180">
+<img src="docs/bear-coffee.png" alt="The bear holding a mug of coffee" width="160">
+</td>
+<td>
+<a href="https://buymeacoffee.com/vishwathilina"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" height="60"></a>
+<br><br>
+One coffee goes a long way. Thank you.
+</td>
+</tr>
+</table>
+
+## Settings
+
+`beforerunit setup` writes this file for you. It lives at
+`~/.config/beforerunit/config.toml`.
 
 ```toml
 [ai]
-mode = "unknown-only"          # off | unknown-only | review-all
+mode = "unknown-only"          # off, unknown-only, or review-all
 provider = "ollama"
 base_url = "http://localhost:11434/v1"
 model = "qwen2.5:0.5b"
 timeout_ms = 4000
 debounce_ms = 300
-min_confidence_to_lower = 0.8
 
 [ui]
-display = "always"             # always | risky-only | off
-theme = "midnight"             # midnight | nord | catppuccin | gruvbox | contrast | mono
-icons = "nerd"                 # nerd | unicode | ascii
-reduce_motion = false          # no light sweep or glow
-screen_reader = false          # plain "[DANGER] ..." text, no animation
+display = "always"             # always, risky-only, or off
+theme = "midnight"             # midnight, nord, catppuccin, gruvbox, contrast, mono
+icons = "nerd"                 # nerd, unicode, or ascii
+reduce_motion = false
+screen_reader = false          # plain text, no animation, easy to hear
 toggle_key = "\\eb"            # Alt-B
 ```
 
-`NO_COLOR` is respected. With `screen_reader = true` the line becomes plain
-text that screen readers announce cleanly.
+`risky-only` hides the line for KNOWN commands, so it only speaks up when
+something needs a look. `screen_reader = true` prints `[DANGER] ...` as
+ordinary text. `NO_COLOR` is respected.
 
 ### Your own rules
 
-Drop TOML files into `~/.config/beforerunit/rules.d/`. They are compiled on
-the next shell start, or right away with `beforerunit compile`. The format is
-the same as the built-in [`rules/`](rules):
+Any command can be taught. Drop a file in `~/.config/beforerunit/rules.d/`
+and open a new terminal (or run `beforerunit compile`):
 
 ```toml
 [[cmd]]
@@ -186,48 +280,39 @@ text = "Deploys {target} to production."
   text = "Force-deploys, skipping checks."
 ```
 
-## Speed
+`text` is what the line will say, in plain words, ten words at most. The
+built-in rules in [`rules/`](rules) are full of examples.
 
-Speed is a feature: the line must never make typing feel slower.
-`beforerunit bench --pty` measures each of these on your machine, and CI fails
-when a budget is missed.
+## For the curious
 
-| Path | Budget | Typical |
+The line has to keep up with your typing, so there are hard speed limits.
+`beforerunit bench` checks them on your machine.
+
+| What | Must stay under | Usually |
 |---|---|---|
-| Rule engine per keystroke | 50 µs | 3 µs |
-| bash keystroke to paint (loadable builtin, no process spawned) | 1 ms in-process, 6 ms through the terminal | 12 µs, 0.9 ms |
-| zsh keystroke (persistent socket to the daemon) | 1 ms round trip | 0.05 ms |
-| fish keystroke (one small process) | 3 ms | 2 ms |
-| Shell startup cost | 5 ms | 3.8 ms |
-| Daemon memory, idle CPU | 15 MB, 0% | 9 MB, 0% |
-| Binary size | 8 MB | 7.2 MB |
+| Deciding the risk for one keystroke | 50 µs | 3 µs |
+| bash, keystroke until the line is drawn | 6 ms | 0.9 ms |
+| zsh, same | 6 ms | 2 ms |
+| fish, same | 12 ms | 4 ms |
+| Time added when the shell starts | 5 ms | 3.8 ms |
+| Memory while idle | 15 MB | 9 MB |
+| Program size | 8 MB | 7.2 MB |
 
-## How it works
+bash runs the check inside the shell itself, so it does not start a new
+program on every key. zsh keeps one connection open to a small background
+helper. fish starts one small program per keystroke. The helper starts on its
+own the first time the AI is needed, and it exits after a few idle hours.
 
-- **bash.** A native loadable builtin (`libbeforerunit_bash.so`) runs the
-  engine inside bash itself, so no process is started per keystroke. Without
-  it, a fallback starts one small process per keystroke.
-- **zsh.** Draws through `POSTDISPLAY` and region highlighting, so it works
-  alongside zsh-autosuggestions. It talks to the daemon over a persistent
-  socket.
-- **fish.** Uses key bindings with `commandline` and runs one small process
-  per keystroke.
-- **Daemon.** Started on demand and stopped after 3 hours idle. It debounces
-  and cancels AI requests per session, caches answers in memory and on disk,
-  and delivers results without disturbing what you type.
-
-The crates:
-- `beforerunit-core`: lexer, rules, rendering;
-- `beforerunit-ai`: OpenAI-compatible client;
-- `beforerunit-bash`: the builtin;
-- `beforerunit`: the command-line tool, daemon and settings app.
+The code is split into `beforerunit-core` (the rules and the line),
+`beforerunit-ai` (the AI client), `beforerunit-bash` (the in-shell piece)
+and `beforerunit` (the program you run).
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md). Rule additions are the easiest place
-to start. Security issues: [SECURITY.md](SECURITY.md).
+Rule ideas are the best place to start. See
+[CONTRIBUTING.md](CONTRIBUTING.md). Security issues go through
+[SECURITY.md](SECURITY.md), not the public issues.
 
 ## License
 
-Dual-licensed under [MIT](LICENSE-MIT) or [Apache-2.0](LICENSE-APACHE), at
-your option.
+[MIT](LICENSE-MIT) or [Apache-2.0](LICENSE-APACHE), whichever you prefer.

@@ -1,7 +1,7 @@
 #!/bin/sh
 # BeforeRunIt installer.
 #
-#   curl -fsSL https://github.com/beforerunit/beforerunit/releases/latest/download/install.sh | sh
+#   curl -fsSL https://github.com/vishwathilina/BeforeRunIt/releases/latest/download/install.sh | sh
 #
 # Options (or environment variables):
 #   --prefix DIR       install into DIR/bin and DIR/lib/beforerunit
@@ -16,7 +16,7 @@
 
 set -eu
 
-REPO="beforerunit/beforerunit"
+REPO="vishwathilina/BeforeRunIt"
 PREFIX="${BEFORERUNIT_PREFIX:-}"
 VERSION="${BEFORERUNIT_VERSION:-latest}"
 SHELL_NAME=""

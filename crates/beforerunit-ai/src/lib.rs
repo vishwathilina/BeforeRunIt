@@ -287,7 +287,7 @@ impl Client {
     }
 
     fn req(&self, b: reqwest::RequestBuilder) -> reqwest::RequestBuilder {
-        let b = b.header("HTTP-Referer", "https://github.com/beforerunit/beforerunit").header("X-Title", "BeforeRunIt");
+        let b = b.header("HTTP-Referer", "https://github.com/vishwathilina/BeforeRunIt").header("X-Title", "BeforeRunIt");
         match &self.ep.api_key {
             Some(k) if !k.is_empty() => b.bearer_auth(k),
             _ => b,

@@ -3,7 +3,7 @@
 ## Reporting a vulnerability
 
 Please report security issues privately through
-[GitHub security advisories](https://github.com/beforerunit/beforerunit/security/advisories/new),
+[GitHub security advisories](https://github.com/vishwathilina/BeforeRunIt/security/advisories/new),
 not in public issues. Expect a first answer within 7 days.
 
 ## Scope

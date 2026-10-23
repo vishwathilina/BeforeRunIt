@@ -13,7 +13,7 @@ description: |
   plain-English summary under your prompt while you type, before you press
   Enter. Works with bash, zsh and fish. Optional AI review over any
   OpenAI-compatible endpoint.
-homepage: https://github.com/beforerunit/beforerunit
+homepage: https://github.com/vishwathilina/BeforeRunIt
 license: MIT OR Apache-2.0
 recommends:
   - fontconfig

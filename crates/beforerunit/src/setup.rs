@@ -1029,7 +1029,7 @@ impl App {
         ));
         lines.push(Line::raw(""));
         lines.push(Line::styled("Open source under MIT or Apache-2.0.", dim));
-        lines.push(Line::styled("https://github.com/beforerunit/beforerunit", Style::default().fg(rgb(theme.analyzing))));
+        lines.push(Line::styled("https://github.com/vishwathilina/BeforeRunIt", Style::default().fg(rgb(theme.analyzing))));
         let up = self.started.elapsed().as_secs();
         lines.push(Line::raw(""));
         lines.push(Line::styled(format!("Session {}m{:02}s", up / 60, up % 60), dim));

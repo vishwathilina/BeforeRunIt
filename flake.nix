@@ -40,7 +40,7 @@
 
           meta = with pkgs.lib; {
             description = "Live command risk line for Linux shells";
-            homepage = "https://github.com/beforerunit/beforerunit";
+            homepage = "https://github.com/vishwathilina/BeforeRunIt";
             license = with licenses; [ mit asl20 ];
             mainProgram = "beforerunit";
             platforms = platforms.linux;
