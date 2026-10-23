@@ -2,14 +2,20 @@
   <img src="docs/logo.png" alt="BeforeRunIt" width="520">
 </p>
 
+<h3 align="center">Your finger is on Enter. Read the line under it first.</h3>
+
 <p align="center">
-  <b>Your finger is on Enter. Read the line under it first.</b>
+  BeforeRunIt reads the command you are typing and tells you, in plain English,<br>
+  what it will actually do. One line under your prompt. About ten words.<br>
+  A rule book answers instantly. An AI you choose answers the rest.
 </p>
 
 <p align="center">
-  BeforeRunIt watches the command you are typing and says, in plain English,<br>
-  what it will actually do. One line. About ten words. On every keystroke.<br>
-  bash, zsh and fish. On your machine. No account, no cloud.
+  <a href="#install"><img src="https://img.shields.io/badge/install-one_command-2dd4bf?style=for-the-badge" alt="Install with one command"></a>
+  <a href="#an-ai-that-knows-the-commands-the-rule-book-does-not"><img src="https://img.shields.io/badge/AI-any_OpenAI--compatible-a78bfa?style=for-the-badge" alt="AI: any OpenAI-compatible server"></a>
+  <img src="https://img.shields.io/badge/shells-bash_%7C_zsh_%7C_fish-60a5fa?style=for-the-badge" alt="bash, zsh and fish">
+  <img src="https://img.shields.io/badge/built_with-Rust-f59e0b?style=for-the-badge" alt="Built with Rust">
+  <a href="#license"><img src="https://img.shields.io/badge/license-MIT_or_Apache--2.0-94a3b8?style=for-the-badge" alt="MIT or Apache-2.0"></a>
 </p>
 
 ## The half-second that matters
@@ -43,6 +49,64 @@ $ ncdu
 ```
 
 `git status` only looks. `ncdu` is a real, useful program that the rule book has simply not met yet, so the line says so instead of pretending.
+
+That last line is where the AI comes in.
+
+## An AI that knows the commands the rule book does not
+
+The rule book knows about 160 common commands by heart. Linux has thousands.
+Turn on the AI review and the UNKNOWN line stops being a shrug:
+
+```text
+$ ncdu
+╰─  UNKNOWN  Not in the rule book. Check before running.
+        ...you pause for a moment...
+╰─  KNOWN  Shows which folders use the most disk space  AI
+
+$ frobnicate --all
+╰─  CAUTION  Unknown program, check what it does first  AI
+```
+
+The **AI** at the end is a small robot icon in your terminal. It tells you
+the AI wrote that line, not the rule book.
+
+It is a second opinion, not a replacement. The two work together:
+
+| | Rule book | AI review |
+|---|---|---|
+| Speed | Instantly, on every key | A moment after you stop typing |
+| Knows | ~160 common commands, exactly | Almost anything, from its training |
+| Needs | Nothing. Works offline | A model: free on your own machine, or an API key |
+| Gets the final say on | Hard rules, always | Everything else, within limits |
+
+**It can warn you, but it cannot talk you into danger.** The AI may raise a
+warning whenever it disagrees. It may lower one by a single step, and only
+when it is very sure. It can never lower a hard rule. Here is
+`beforerunit explain`, showing its work:
+
+```text
+$ dd if=/dev/zero of=/dev/sdb
+╰─  DANGER  Overwrites disk "/dev/sdb". All data lost.  AI
+   Command   dd
+   Rules     DANGER  hard rule, AI cannot lower it
+   Targets   /dev/sdb
+   AI        DANGER 0.95  Overwrites the whole disk sdb. No undo.
+```
+
+**It looks at where you are, not just what you typed.** The AI is told the
+folder name, whether it is a git repo with uncommitted changes, whether you are
+root, and whether the files you named exist. "Delete build" means something
+different when `build` is the only copy of your work.
+
+**It never slows your typing.** Every keystroke is answered by the rule book
+first. The AI only runs once you pause, in a small background helper. Its
+answer slides into the same line, and repeat commands come from a cache
+instantly.
+
+**It is your AI.** Run it free and fully offline with
+[Ollama](https://ollama.com) or LM Studio, or use Groq, OpenRouter, OpenAI, or
+any server that speaks the OpenAI API. Turning it on takes a minute:
+[see how](#turn-on-the-ai-in-a-minute).
 
 ## The four words
 
@@ -93,7 +157,7 @@ Not in the rule book yet. Read it yourself before you run it.
 </td>
 <td align="center">
 <img src="docs/scene-setup.jpg" alt="The bear has an idea while running beforerunit setup"><br>
-<b>Want a second opinion?</b> That is what setup is for.
+<b>Turn on the AI.</b> Now UNKNOWN gets a real answer.
 </td>
 </tr>
 </table>
@@ -185,38 +249,49 @@ command runs as usual.
 `explain` uses its exit code so scripts can read it: 0 known, 1 unknown,
 2 caution, 3 danger.
 
-## A second opinion, from an AI you choose
+## Turn on the AI in a minute
 
-You do not need this. The rule book covers about 160 common commands and it
-never touches the network.
+The AI is optional. Nothing is sent anywhere until you set it up, and
+everything else in BeforeRunIt works without it.
 
-For commands it does not know, you can point BeforeRunIt at any server that
-speaks the OpenAI API: Ollama or LM Studio on your own machine (free), or
-Groq, OpenRouter or OpenAI.
+**Free and offline, on your own machine.** Install [Ollama](https://ollama.com), then:
 
 ```sh
+ollama pull qwen2.5:0.5b
 beforerunit setup
 ```
 
-Pick a provider, paste your key, press `f` to fetch the model list, press `t`
-to test, then **Ctrl-S** to save. Open a new terminal afterwards.
+On the Provider row, press the right arrow until it says **Ollama (local)**.
+That fills in the address and the model for you. Press `t` to test, then
+**Ctrl-S** to save.
 
-A small instruct model is the right tool here. Reasoning models spend the
-whole reply "thinking" and often send back nothing useful.
+**Or a hosted model.** In `beforerunit setup`, pick Groq, OpenRouter or
+Custom (for OpenAI or your own server), paste your API key, press `f` to fetch
+the model list, `t` to test, and **Ctrl-S** to save.
 
-What the AI is allowed to do:
+Open a new terminal afterwards. `beforerunit test-ai` checks the connection
+from the command line at any time.
 
-- It can raise the warning whenever it disagrees.
-- It can lower the warning by one step, and only when it is very sure.
-- It can never lower a hard rule. `rm -rf /` stays DANGER no matter what it says.
+Pick a small, fast instruct model. Reasoning models spend the whole reply
+"thinking" and often send back nothing useful.
 
-What the AI is allowed to see: the command, with passwords and keys blanked
-out, the folder name, whether it is a git repo, whether you are root, and
-whether the files you named exist. Never your file contents, your environment,
-or your history.
+**Choose how often it speaks up** with `mode` in the settings:
+
+| Mode | What the AI reviews |
+|---|---|
+| `review-all` | Every command, as a second opinion on the rule book too. The default. |
+| `unknown-only` | Only commands the rule book does not know. Fewer requests. |
+| `off` | Nothing. Rule book only, no network at all |
+
+**What it sees, and what it never sees.** The AI gets the command, with
+passwords, tokens and keys blanked out first. It also gets the folder name,
+the git state, whether you are root, and whether the files you named exist.
+It never gets your file contents, your environment variables, or your history.
 
 Your key is stored in the system keyring. With no keyring, it goes in a file
-only your user can read. `BEFORERUNIT_API_KEY` overrides both.
+only your user can read. `BEFORERUNIT_API_KEY` overrides both. Answers are
+cached for 7 days, so a command you repeat in the same folder is asked about
+once, not every time.
 
 ## Support this project
 
@@ -239,11 +314,11 @@ One coffee goes a long way. Thank you.
 ## Settings
 
 `beforerunit setup` writes this file for you. It lives at
-`~/.config/beforerunit/config.toml`.
+`~/.config/beforerunit/config.toml`. Here it is with the Ollama provider picked:
 
 ```toml
 [ai]
-mode = "unknown-only"          # off, unknown-only, or review-all
+mode = "review-all"            # review-all, unknown-only, or off
 provider = "ollama"
 base_url = "http://localhost:11434/v1"
 model = "qwen2.5:0.5b"
